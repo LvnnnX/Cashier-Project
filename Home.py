@@ -22,7 +22,12 @@ def main(page: Page):
     )
     
     page.add(header)
-    
+    leftContainer=Container(
+                    left=0,
+                    width=OS_WIDTH/2,
+                    height=OS_HEIGHT-50,
+                    bgcolor=colors['W_Bg'],
+                )
     mainpage = Container(
         width=OS_WIDTH,
         height=OS_HEIGHT-50,
@@ -31,12 +36,7 @@ def main(page: Page):
         content=Stack(
             [
                 # Yang mau diisi di bagian main page
-                Container(
-                    left=0,
-                    width=OS_WIDTH/2,
-                    height=OS_HEIGHT-50,
-                    bgcolor=colors['W_Bg'],
-                ),
+                leftContainer,
                 Container(
                     left=OS_WIDTH/2,
                     width=OS_WIDTH/2,
