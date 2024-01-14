@@ -5,5 +5,10 @@
     "Accent" : "#f7f7f7",
     "W_Bg" : "#AEAEAE",
     "B_Bg" : "#3C629B",
-    "White" : "#FFFFFF"
+    "White" : "#FFFFFF",
+    "Gray/300" : "#CBD5E0",
+    "Gray/50" : "#F7FAFC",
+    "Primary/500" : "#846046",
+    "Black" : "#000000",
+    "blackAlpha/500" : "#36000000"
 }
