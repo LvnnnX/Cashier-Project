@@ -1,5 +1,5 @@
-from libs import *
-from importer import *
+from utils.libs import *
+from utils.importer import *
 
 dummy_data = {
     0: {"name": "Apple", "description": "Red and juicy", "quantity": 5, "price": 1.99},

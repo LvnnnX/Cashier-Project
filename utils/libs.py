@@ -5,7 +5,7 @@ from screeninfo import get_monitors
 import flet.canvas as cv
 from collections import namedtuple
 
-BASEDIR = Path(__file__).parent
+BASEDIR = Path(__file__).parent.parent
 JSONPATH = BASEDIR / 'json'
 DATAPATH = BASEDIR / 'data'
 IMGPATH = DATAPATH / 'img'
