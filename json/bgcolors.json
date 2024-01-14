@@ -9,6 +9,8 @@
     "Gray/300" : "#CBD5E0",
     "Gray/50" : "#F7FAFC",
     "Primary/500" : "#846046",
+    "Primary/100" : "#F8F0E1",
+    "Primary/900" : "#3F160D",
     "Black" : "#000000",
     "blackAlpha/500" : "#36000000"
 }
