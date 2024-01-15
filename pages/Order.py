@@ -110,6 +110,11 @@ def main(page: Page):
 
     OS_SIZE = get_monitors()[0]
     OS_WIDTH, OS_HEIGHT = OS_SIZE.width, OS_SIZE.height
+    
+    page.window_width=OS_WIDTH
+    page.window_height=OS_HEIGHT
+    # page.window_full_screen = True
+    page.window_focused = True
 
     header = Container(
         width=OS_WIDTH,
@@ -254,9 +259,27 @@ def main(page: Page):
                 #         value='1'
                 #     )
                 # ),
-                *get_items(3),
+                *get_items(10),
             ],
         ),
+    )
+    
+    detail_nota = Container(
+        width=OS_WIDTH / 2 - OS_WIDTH / 2 / 3,
+        height=OS_HEIGHT - OS_HEIGHT / 3,
+        margin=margin.only(top=10, left=0),
+        # bgcolor=colors["Black"],
+        border_radius=10,
+        content=Container(
+            content=
+            Column(
+                controls=[
+                    Row(
+                        
+                    )
+                ]
+            )
+        )
     )
 
     mainpage = Container(
@@ -267,6 +290,7 @@ def main(page: Page):
         content=Row(
             controls=[
                 Column([searchbar_header, dummy_data]),
+                Column([detail_nota])
             ]
         ),
     )
