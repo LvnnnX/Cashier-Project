@@ -35,8 +35,8 @@ def main(page: Page):
 
     def window_event_page(e):
         if e.data in ["resized","unmaximize","maximize"]:
-            # if page.route in ["/NotaBaru","/DaftarNota","/StokdanProduk","/Analitik","/Admin"]:
-            #     print(page.route)
+            if page.route in ["/NotaBaru","/DaftarNota","/StokdanProduk","/Analitik","/Admin"]:
+                print(page.route)
             page.haeder.resize_event(page.window_width)
             page.update()
 
