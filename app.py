@@ -1,6 +1,7 @@
 from utils.libs import *
 from utils.importer import *
 import pages.LoginPage as lg
+import pages.DaftarNota as dn
 import component.Navbar as nv
 
 def main(page: Page):
@@ -17,14 +18,14 @@ def main(page: Page):
             )
         )
         if page.route == "/DaftarNota":
-            page.views.append(
-                View(
+            DaftarNota=View(
                     "/DaftarNota",
                     [
-                        page.haeder
+                        page.haeder,
                     ],
                 )
-            )
+            page.views.append(DaftarNota)
+            dn.main(DaftarNota)
         page.update()
 
     def view_pop(view):
@@ -33,10 +34,10 @@ def main(page: Page):
         page.go(top_view.route)
 
     def window_event_page(e):
-        if e.data=="resized":
+        if e.data in ["resized","unmaximize","maximize"]:
             if page.route in ["/NotaBaru","/DaftarNota","/StokdanProduk","/Analitik","/Admin"]:
-                page.haeder.controls[0].resize_event(page.window_width)
-            page.update()
+                page.haeder.resize_event(page.window_width)
+                page.update()
 
 
     page.on_route_change = route_change
