@@ -1,6 +1,6 @@
 from utils.libs import *
 from utils.importer import *
-
+import component.Navbar as nv
 dummy_data = {
     0: {"name": "Apple", "description": "Red and juicy", "quantity": 5, "price": 1.99},
     1: {
@@ -164,25 +164,7 @@ def main(page: Page):
     OS_SIZE = get_monitors()[0]
     OS_WIDTH, OS_HEIGHT = OS_SIZE.width, OS_SIZE.height
     
-    header = Container(
-        width=OS_WIDTH,
-        height=50,
-        bgcolor=colors['White'],
-        border_radius=10,
-        content=Stack(
-            [
-                # Yang mau diisi di bagian Header
-                # Text(
-                #     value="Home",
-                #     size=30,
-                #     left=OS_WIDTH/2,
-                #     top=10,
-                #     color=colors['Text']
-                # )
-                
-            ]
-        )
-    )
+    header = nv.Navbar(page.window_width)
     
     page.add(header)
     
@@ -246,8 +228,12 @@ def main(page: Page):
         )
     )
     
+    def resize(e):
+        header.resize_event(page.window_width)
+        page.update()
+    page.on_window_event=resize
     page.add(mainpage)
-    
+
     table.fill_data_table()
     
     
