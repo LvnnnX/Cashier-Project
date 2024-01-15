@@ -4,12 +4,12 @@ from utils.libs import *
 from utils.importer import load_colors
 
 
-def login_page(page: Page):
-    page.title = "Login Page"
-    page.window_width = 800
-    page.window_height = 600
-    page.window_resizable = False
-    page.window_title_bar_buttons_hidden = True
+def login_page(page: View):
+    # page.title = "Login Page"
+    # page.window_width = 800
+    # page.window_height = 600
+    # page.window_resizable = False
+    # page.window_title_bar_buttons_hidden = True
     # page.theme = colors['White']
     colors = load_colors()
 
@@ -114,7 +114,7 @@ def login_page(page: Page):
         ),
     )
 
-    page.add(body)
+    page.controls.append(body)
 
 if __name__ == "__main__":
     app(target=login_page)

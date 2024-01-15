@@ -6,7 +6,8 @@ from utils.importer import load_colors
 class Navbar(Container):
     def __init__(self,width_change):
         super().__init__()
-        self.width=width_change
+        colors = load_colors()
+        self.width=width_change-30
         self.content=Row(
             controls=[
                 Container(
@@ -19,66 +20,117 @@ class Navbar(Container):
                     padding=0,
                     margin=0
                 ),
-                Container(
-                    width=self.width/100*12,
+                # NavigationBar(
+                #     width=self.width/100*60,
+                #     height=100,
+                #     bgcolor="white",
+                #     destinations=[
+                #         NavigationDestination(
+                #             label="Nota Baru"
+                #         ),
+                #         NavigationDestination(
+                #             label="Daftar Nota"
+                #         ),
+                #         NavigationDestination(
+                #             label="Stok dan Produk"
+                #         ),
+                #         NavigationDestination(
+                #             label="Analitik"
+                #         ),
+                #         NavigationDestination(
+                #             label="Admin"
+                #         ),
+                #     ],
+                #     elevation=50,
+                #     adaptive=True
+                # ),
+                Row(
                     height=100,
-                    content=Text(
-                        "Nota Baru",
-                        size=16,
-                        weight="bold"
-                    ),
-                    alignment=alignment.center,
-                    padding=0,
-                    margin=0
-                ),
-                Container(
-                    width=self.width/100*12,
-                    height=100,
-                    content=Text(
-                        "Daftar Nota",
-                        size=16,
-                        weight="light"
-                    ),
-                    alignment=alignment.center,
-                    padding=0,
-                    margin=0
-                ),
-                Container(
-                    width=self.width/100*12,
-                    height=100,
-                    content=Text(
-                        "Stok dan Produk",
-                        size=16,
-                        weight="light",
-                        text_align=TextAlign.CENTER
-                    ),
-                    alignment=alignment.center,
-                    padding=0,
-                    margin=0
-                ),
-                Container(
-                    width=self.width/100*12,
-                    height=100,
-                    content=Text(
-                        "Analitik",
-                        size=16,
-                        weight="light"
-                    ),
-                    alignment=alignment.center,
-                    padding=0,
-                    margin=0
-                ),
-                Container(
-                    width=self.width/100*12,
-                    height=100,
-                    content=Text(
-                        "Admin",
-                        size=16,
-                        weight="light"
-                    ),
-                    alignment=alignment.center,
-                    padding=0,
-                    margin=0
+                    width=self.width/100*60,
+                    controls=[
+                        TextButton(
+                            "Nota Baru",
+                            height=100,
+                            width=self.width/100*60/100*20,
+                            style=ButtonStyle(
+                                shape={
+                                    MaterialState.DEFAULT:RoundedRectangleBorder(radius=0),
+                                    MaterialState.FOCUSED:RoundedRectangleBorder(radius=0),     
+                                },
+                                color={
+                                    MaterialState.DEFAULT:colors["Primary/500"],
+                                    MaterialState.FOCUSED:colors["Primary/500"],
+                                    MaterialState.HOVERED:colors["Primary/500"],
+                                },
+                            ),
+                        ),
+                        TextButton(
+                            "Daftar Nota",
+                            height=100,
+                            width=self.width/100*60/100*20,
+                            style=ButtonStyle(
+                                shape={
+                                    MaterialState.DEFAULT:RoundedRectangleBorder(radius=0),
+                                    MaterialState.FOCUSED:RoundedRectangleBorder(radius=0),     
+                                },
+                                color={
+                                    MaterialState.DEFAULT:colors["blackAlpha/500"],
+                                    MaterialState.FOCUSED:colors["Primary/500"],
+                                    MaterialState.HOVERED:colors["Primary/500"],
+                                },
+                            ),
+                        ),
+                        TextButton(
+                            "Stok dan Produk",
+                            height=100,
+                            width=self.width/100*60/100*20,
+                            style=ButtonStyle(
+                                shape={
+                                    MaterialState.DEFAULT:RoundedRectangleBorder(radius=0),
+                                    MaterialState.FOCUSED:RoundedRectangleBorder(radius=0),     
+                                },
+                                color={
+                                    MaterialState.DEFAULT:colors["blackAlpha/500"],
+                                    MaterialState.FOCUSED:colors["Primary/500"],
+                                    MaterialState.HOVERED:colors["Primary/500"],
+                                },
+                            ),
+                        ),
+                        TextButton(
+                            "Analitik",
+                            height=100,
+                            width=self.width/100*60/100*20,
+                            style=ButtonStyle(
+                                shape={
+                                    MaterialState.DEFAULT:RoundedRectangleBorder(radius=0),
+                                    MaterialState.FOCUSED:RoundedRectangleBorder(radius=0),     
+                                },
+                                color={
+                                    MaterialState.DEFAULT:colors["blackAlpha/500"],
+                                    MaterialState.FOCUSED:colors["Primary/500"],
+                                    MaterialState.HOVERED:colors["Primary/500"],
+                                },
+                            ),
+                        ),
+                        TextButton(
+                            "Admin",
+                            height=100,
+                            width=(self.width/100*60)/100*15,
+                            style=ButtonStyle(
+                                shape={
+                                    MaterialState.DEFAULT:RoundedRectangleBorder(radius=0),
+                                    MaterialState.FOCUSED:RoundedRectangleBorder(radius=0),     
+                                },
+                                color={
+                                    MaterialState.DEFAULT:colors["blackAlpha/500"],
+                                    MaterialState.FOCUSED:colors["Primary/500"],
+                                    MaterialState.HOVERED:colors["Primary/500"],
+                                },
+                            ),
+                        ),
+                    ],
+                    alignment=MainAxisAlignment.SPACE_EVENLY,
+                    spacing=0,
                 ),
                 Container(
                     width=self.width/100*20,
@@ -117,11 +169,13 @@ class Navbar(Container):
         self.margin=0
     
     def resize_event(self,page_width):
-        self.width=page_width
+        self.width=page_width-30
         self.content.controls[0].width=self.width/100*20
-        self.content.controls[1].width=self.width/100*12
-        self.content.controls[2].width=self.width/100*12
-        self.content.controls[3].width=self.width/100*12
-        self.content.controls[4].width=self.width/100*12
-        self.content.controls[5].width=self.width/100*12
-        self.content.controls[6].width=self.width/100*20
+        self.content.controls[1].width=self.width/100*60
+        self.content.controls[2].width=self.width/100*20
+        self.content.controls[1].controls[0].width=self.width/100*60/100*20
+        self.content.controls[1].controls[1].width=self.width/100*60/100*20
+        self.content.controls[1].controls[2].width=self.width/100*60/100*20
+        self.content.controls[1].controls[3].width=self.width/100*60/100*20
+        self.content.controls[1].controls[4].width=self.width/100*60/100*20
+
