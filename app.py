@@ -34,9 +34,8 @@ def main(page: Page):
 
     def window_event_page(e):
         if e.data=="resized":
-            # if page.route in ["/NotaBaru","/DaftarNota","/StokdanProduk","/Analitik","/Admin"]:
-            #     print(page.route)
-            page.haeder.controls[0].resize_event(page.window_width)
+            if page.route in ["/NotaBaru","/DaftarNota","/StokdanProduk","/Analitik","/Admin"]:
+                page.haeder.controls[0].resize_event(page.window_width)
             page.update()
 
 
