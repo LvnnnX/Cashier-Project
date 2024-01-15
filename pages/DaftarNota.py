@@ -4,4 +4,4 @@ from utils.libs import *
 from utils.importer import load_colors
 
 def main(view:View):
-    view.append(Text("test"))
+    view.controls.append(Text("test"))
