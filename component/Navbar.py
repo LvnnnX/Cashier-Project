@@ -2,11 +2,21 @@ import sys
 sys.path.append('../')
 from utils.libs import *
 from utils.importer import load_colors
+colors = load_colors()
+hash_route={
+    "/NotaBaru":0,
+    "/DaftarNota":1,
+    "/StokdanProduk":2,
+    "/Analitik":3,
+    "/Admin":4,
+    "/":0
+}
 
 class Navbar(Container):
-    def __init__(self,width_change):
+    def __init__(self,width_change,page_super):
         super().__init__()
-        colors = load_colors()
+        self.focused_navbar=hash_route[page_super.route]
+        self.super_page=page_super
         self.width=width_change-30
         self.content=Row(
             controls=[
@@ -58,11 +68,12 @@ class Navbar(Container):
                                     MaterialState.FOCUSED:RoundedRectangleBorder(radius=0),     
                                 },
                                 color={
-                                    MaterialState.DEFAULT:colors["Primary/500"],
+                                    MaterialState.DEFAULT:colors["blackAlpha/500"],
                                     MaterialState.FOCUSED:colors["Primary/500"],
                                     MaterialState.HOVERED:colors["Primary/500"],
                                 },
                             ),
+                            on_click=lambda e : page_super.go("/NotaBaru")
                         ),
                         TextButton(
                             "Daftar Nota",
@@ -79,6 +90,7 @@ class Navbar(Container):
                                     MaterialState.HOVERED:colors["Primary/500"],
                                 },
                             ),
+                            on_click=lambda e : page_super.go("/DaftarNota")
                         ),
                         TextButton(
                             "Stok dan Produk",
@@ -95,6 +107,7 @@ class Navbar(Container):
                                     MaterialState.HOVERED:colors["Primary/500"],
                                 },
                             ),
+                        on_click=lambda e : page_super.go("/StokdanProduk")
                         ),
                         TextButton(
                             "Analitik",
@@ -111,6 +124,7 @@ class Navbar(Container):
                                     MaterialState.HOVERED:colors["Primary/500"],
                                 },
                             ),
+                        on_click=lambda e : page_super.go("/Analitik")
                         ),
                         TextButton(
                             "Admin",
@@ -127,6 +141,7 @@ class Navbar(Container):
                                     MaterialState.HOVERED:colors["Primary/500"],
                                 },
                             ),
+                        on_click=lambda e : page_super.go("/Admin")
                         ),
                     ],
                     alignment=MainAxisAlignment.SPACE_EVENLY,
@@ -167,7 +182,7 @@ class Navbar(Container):
         self.alignment=alignment.center
         self.padding=0
         self.margin=0
-    
+        self.content.controls[1].controls[self.focused_navbar].style.color[MaterialState.DEFAULT]=colors["Primary/500"]
     def resize_event(self,page_width):
         self.width=page_width-30
         self.content.controls[0].width=self.width/100*20

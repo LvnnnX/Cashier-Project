@@ -1,26 +1,27 @@
 from utils.libs import *
 from utils.importer import *
 import pages.LoginPage as lg
+import component.Navbar as nv
 
 def main(page: Page):
     page.title = "Routes Example"
-
-    def route_change(route):
+    def route_change(route): 
         page.views.clear()
+        page.haeder=nv.Navbar(page.window_width,page)  
         page.views.append(
             View(
                 "/",
-                [],
+                [
+                    page.haeder
+                ],
             )
         )
-        lg.login_page(page.views[0])
-        if page.route == "/store":
+        if page.route == "/DaftarNota":
             page.views.append(
                 View(
-                    "/store",
+                    "/DaftarNota",
                     [
-                        AppBar(title=Text("Store"), bgcolor=colors.SURFACE_VARIANT),
-                        ElevatedButton("Go Home", on_click=lambda _: page.go("/")),
+                        page.haeder
                     ],
                 )
             )
@@ -31,8 +32,17 @@ def main(page: Page):
         top_view = page.views[-1]
         page.go(top_view.route)
 
+    def window_event_page(e):
+        if e.data=="resized":
+            # if page.route in ["/NotaBaru","/DaftarNota","/StokdanProduk","/Analitik","/Admin"]:
+            #     print(page.route)
+            page.haeder.controls[0].resize_event(page.window_width)
+            page.update()
+
+
     page.on_route_change = route_change
     page.on_view_pop = view_pop
     page.go(page.route)
+    page.on_window_event=window_event_page
 
 app(target=main, view=AppView.WEB_BROWSER)
