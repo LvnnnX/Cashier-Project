@@ -25,7 +25,7 @@ def main(page: Page):
                     ],
                 )
             page.views.append(DaftarNota)
-            dn.main(DaftarNota)
+            dn.main(DaftarNota,page)
         page.update()
 
     def view_pop(view):
@@ -36,9 +36,8 @@ def main(page: Page):
     def window_event_page(e):
         if e.data in ["resized","unmaximize","maximize"]:
             if page.route in ["/NotaBaru","/DaftarNota","/StokdanProduk","/Analitik","/Admin"]:
-                print(page.route)
-            page.haeder.resize_event(page.window_width)
-            page.update()
+                page.haeder.resize_event(page.window_width)
+                page.update()
 
 
     page.on_route_change = route_change
