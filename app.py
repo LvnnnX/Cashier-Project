@@ -5,7 +5,37 @@ import pages.DaftarNota as dn
 import component.Navbar as nv
 
 def main(page: Page):
+    COLOUR_JSON=load_colors()
     page.title = "Routes Example"
+    theme=ColorScheme(
+        # primary="#FFFFFF",
+        # on_primary="#FFFFFF",
+        # primary_container="#FFFFFF",
+        # on_primary_container="#FFFFFF",
+        # on_secondary_container="#FFFFFF",
+        # secondary="#FFFFFF",
+        # on_secondary="#FFFFFF",
+        # secondary_container="#FFFFFF",
+        # tertiary="#FFFFFF",
+        # tertiary_container="#FFFFFF",
+        # on_tertiary="#FFFFFF",
+        # background='#FFFFFF',
+        # on_background="#FFFFFF",
+        # surface="#FFFFFF",
+        # on_surface="#FFFFFF",
+        # surface_variant="#FFFFFF",
+        #ngatur warna button
+        on_surface_variant=COLOUR_JSON["Primary/500"],
+        # outline="#FFFFFF",
+        # outline_variant="#FFFFFF",
+        # shadow="#FFFFFF",
+        # scrim="#FFFFFF",
+        # inverse_surface="#FFFFFF",
+        # inverse_primary="#FFFFFF",
+        #ngatur warna bg overlay
+        surface_tint=COLOUR_JSON["Primary/500"],
+    )
+    page.theme=Theme(color_scheme=theme)
     def route_change(route): 
         page.views.clear()
         page.haeder=nv.Navbar(page.window_width,page)  

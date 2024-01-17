@@ -12,5 +12,6 @@
     "Primary/100":"#F8F0E1",
     "Black" : "#000000",
     "blackAlpha/500" : "#36000000",
-    "Primary/900":"#3F160D"
+    "Primary/900":"#3F160D",
+    "Gray/400":"#A0AEC0"
 }
