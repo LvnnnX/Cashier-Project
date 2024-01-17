@@ -1,1 +1,1 @@
-id_nota_detail, id_nota, tipe_nota, id_kopi, qty, disc, harga_satuan
+id_nota_detail, id_nota_primary, tipe_nota, id_kopi, qty, disc, harga_satuan
