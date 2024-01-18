@@ -3,6 +3,7 @@ from utils.importer import *
 import pages.LoginPage as lg
 import pages.DaftarNota as dn
 import component.Navbar as nv
+import pages.admin as ad
 
 def main(page: Page):
     COLOUR_JSON=load_colors()
@@ -56,6 +57,15 @@ def main(page: Page):
                 )
             page.views.append(DaftarNota)
             dn.main(DaftarNota,page)
+        elif page.route == "/Admin":
+            Admin=View(
+                    "/Admin",
+                    [
+                        page.haeder,
+                    ],
+                )
+            page.views.append(Admin)
+            ad.admin_page(Admin,page)
         page.update()
 
     def view_pop(view):

@@ -8,7 +8,7 @@ def main(view:View,super_page:Page):
     detailNotaContainer=[]
     changeSizeList=[]
     daftarNotaList=[]
-    super_page.flagDaftarNota=True
+    super_page.flagDaftarNota=False
     dummy_data=[
         {
             "No":1,
@@ -74,7 +74,7 @@ def main(view:View,super_page:Page):
         }
     ]
     COLOUR_JSON=load_colors()
-    style_selected=ButtonStyle(
+    style_unselected=ButtonStyle(
         shape=RoundedRectangleBorder(radius=0),
         color={
             MaterialState.DEFAULT:COLOUR_JSON["Primary/500"],
@@ -89,7 +89,7 @@ def main(view:View,super_page:Page):
             MaterialState.HOVERED:COLOUR_JSON["Primary/500"],
         }
     )
-    style_unselected=ButtonStyle(
+    style_selected=ButtonStyle(
         shape=RoundedRectangleBorder(radius=0),
         color=COLOUR_JSON["White"],
         side=BorderSide(1,COLOUR_JSON["Primary/500"]),
@@ -234,16 +234,16 @@ def main(view:View,super_page:Page):
     )
     detailNotaContainer.append(NONEDATA)
     def clicked_nota_berlangsung(e):
-        daftar_nota_button[0].style=style_selected
-        daftar_nota_button[1].style=style_unselected
+        daftar_nota_button[0].style=style_unselected
+        daftar_nota_button[1].style=style_selected
         super_page.flagDaftarNota=True
         detailNotaContainer.clear()
         detailNotaContainer.append(NONEDATA)
         enableNotaButton([0,1,2])
         super_page.update()
     def clicked_nota_NotaSelesai(e):
-        daftar_nota_button[0].style=style_unselected
-        daftar_nota_button[1].style=style_selected
+        daftar_nota_button[0].style=style_selected
+        daftar_nota_button[1].style=style_unselected
         super_page.flagDaftarNota=False
         detailNotaContainer.clear()
         detailNotaContainer.append(NONEDATA)
