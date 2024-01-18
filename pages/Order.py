@@ -4,146 +4,60 @@ sys.path.append("../")
 from utils.libs import *
 from utils.importer import *
 
-
-def search_field(function: callable, colors, width):
-    return TextField(
-        border_color="transparent",
-        width=width,
-        height=20,
-        text_size=14,
-        content_padding=0,
-        cursor_color=colors["Primary/900"],
-        cursor_width=1,
-        color=colors["Primary/900"],
-        hint_text="Cari Barang",
-        on_change=function,
-        hint_style=TextStyle(color=colors["Primary/900"]),
-    )
-
-
-def search_bar(control: TextField, colors=colors, width=500):
-    return Container(
-        width=width,
-        bgcolor=colors["Primary/100"],
-        border_radius=14,
-        opacity=0,
-        animate_opacity=300,
-        padding=8,
-        # margin=margin.only(left=20),
-        content=Row(
-            spacing=10,
-            vertical_alignment="center",
-            controls=[
-                Container(
-                    margin=margin.only(left=15),
-                    content=Icon(
-                        name=icons.SEARCH_ROUNDED,
-                        size=17,
-                        opacity=0.85,
-                        color=colors["Primary/900"],
-                    ),
-                ),
-                Container(margin=margin.only(left=0), content=control),
-            ],
-        ),
-    )
-
-
-class Header(Container):
-    def __init__(self, width, colors, header_style) -> None:
-        super().__init__(
-            **header_style,
-            #  on_hover=self.toggle_search
-        )
-        self.width = width
-        self.search_value: TextField = search_field(self, colors, width=self.width)
-
-        self.search = search_bar(
-            self.search_value, colors=colors, width=self.width * 2 / 3
-        )
-
-        self.name = Text("")
-        self.avatar = IconButton("Person")
-
-        self.content = Container(
-            Column(
-                [
-                    Column(
-                        [
-                            Container(
-                                width=self.width / 2,
-                                margin=margin.only(top=20),
-                                content=Row(
-                                    controls=[
-                                        Container(
-                                            margin=margin.only(left=0),
-                                            content=Text(
-                                                "Varian Kopi",
-                                                color=colors["Black"],
-                                                size=30,
-                                                weight="bold",
-                                            ),
-                                        ),
-                                        Container(
-                                            margin=margin.only(
-                                                self.width - (self.width / 1.5)
-                                            ),
-                                            content=Text("2 Varian Kopi Tersedia"),
-                                        ),
-                                    ]
-                                ),
-                            ),
-                            Container(margin=margin.only(top=20), content=self.search),
-                        ]
-                    ),
-                ]
-            )
-        )
-
-        self.search.opacity = 1
-
-
-def main(page: Page):
+def main(view: View, super_page : Page):
     colors = load_colors()
-    page.title = "Home"
-    page.bgcolor = colors["White"]
+    # page.title = "Home"
+    # page.
+    # view.bgcolor = colors["Gray/50"]
 
-    OS_SIZE = get_monitors()[0]
-    OS_WIDTH, OS_HEIGHT = OS_SIZE.width, OS_SIZE.height
-    
-    page.window_width=OS_WIDTH
-    page.window_height=OS_HEIGHT
-    # page.window_full_screen = True
-    page.window_focused = True
+    # OS_SIZE = get_monitors()[0]
+    # OS_WIDTH, OS_HEIGHT = OS_SIZE.width, OS_SIZE.height
+    OS_WIDTH = super_page.window_width
+    OS_HEIGHT = super_page.window_height
 
-    header = Container(
-        width=OS_WIDTH,
-        height=50,
-        bgcolor=colors["White"],
-        border_radius=10,
-        content=Stack(
-            [
-                # Yang mau diisi di bagian Header
-                # Text(
-                #     value="Home",
-                #     size=30,
-                #     left=OS_WIDTH/2,
-                #     top=10,
-                #     color=colors['Text']
-                # )
-            ]
+    # page.window_width = OS_WIDTH
+    # page.window_height = OS_HEIGHT
+    # # page.window_full_screen = True
+    # page.window_focused = True
+    style_selectable=ButtonStyle(
+        shape=RoundedRectangleBorder(radius=10),
+        color={
+            MaterialState.DEFAULT:colors["Primary/500"],
+            MaterialState.FOCUSED:colors["White"],
+            MaterialState.HOVERED:colors["White"],
+        },
+        side=BorderSide(1,colors["Primary/500"]),
+        overlay_color=colors.TRANSPARENT,
+        bgcolor={
+            MaterialState.DEFAULT:colors["White"],
+            MaterialState.FOCUSED:colors["Primary/500"],
+            MaterialState.HOVERED:colors["Primary/500"],
+        }
+    )
+
+
+    alertYaorBatalkan=[
+        TextButton(
+            "Batalkan",
+            style=style_selectable,
+            width=super_page.window_width/100*40/100*20
         ),
-    )
+        TextButton(
+            "Ya",
+            style=style_selectable,
+            width=super_page.window_width/100*40/100*20
+        ),
+    ]
 
-    page.add(header)
 
-    header_style = {
-        "width": OS_WIDTH / 2,
-    }
-    searchbar_header = Header(
-        width=OS_WIDTH / 2, colors=colors, header_style=header_style
-    )
-
+    def editDataActionYes(e):
+        super_page.dialog.open=False
+        super_page.update()
+        
+        
+    def batalkanEditActionEdit(e):
+        super_page.dialog.open=False
+        super_page.update()
     # for each item, width 250, height 250
     def get_items(N: int = 10):
         items_list = []
@@ -228,7 +142,9 @@ def main(page: Page):
                                                 MaterialState.HOVERED: RoundedRectangleBorder(
                                                     radius=8
                                                 ),
-                                                MaterialState.DEFAULT: RoundedRectangleBorder(radius=2)
+                                                MaterialState.DEFAULT: RoundedRectangleBorder(
+                                                    radius=2
+                                                ),
                                             }
                                         ),
                                     ),
@@ -239,6 +155,41 @@ def main(page: Page):
                 ),
             )
         return items_list
+
+    searchbar = Container(
+        # bgcolor=colors['Black'],
+        width=super_page.window_width/100*40-140,
+        content=Column(
+            controls=[
+                Container(
+                    # bgcolor=colors['Black'],
+                    content=
+                    Row(
+                    alignment=MainAxisAlignment.SPACE_BETWEEN,
+                    # vertical_alignment=CrossAxisAlignment.START,
+                    controls=[
+                        Text(
+                            "Varian Kopi",
+                            weight=FontWeight.BOLD,
+                            size=30,
+                            color=colors['Black'],
+                        ),
+
+                            Text(
+                            "2 Varian Tersedia",
+                            weight=FontWeight.W_500,
+                            size=16,
+                            color=colors['blackAlpha/500'],
+                            )
+                        
+                    ]
+                )
+                )
+                
+                
+            ]
+        )
+    )
 
     dummy_data = Container(
         width=OS_WIDTH / 2 - OS_WIDTH / 2 / 3,
@@ -263,39 +214,343 @@ def main(page: Page):
             ],
         ),
     )
-    
+
     detail_nota = Container(
-        width=OS_WIDTH / 2 - OS_WIDTH / 2 / 3,
-        height=OS_HEIGHT - OS_HEIGHT / 3,
-        margin=margin.only(top=10, left=0),
+        # width=super_page.window_width/100*40,
+        # height=super_page.window_height-150,
+        # margin=margin.only(top=10, left=0),
         # bgcolor=colors["Black"],
         border_radius=10,
-        content=Container(
-            content=
+        content=
             Column(
                 controls=[
-                    Row(
-                        
+                    Container(
+                    margin=margin.only(top=20),
+                    content=Row(
+                        controls=
+                        [
+                            Text(value='Detail Nota',
+                                 size=26,
+                                 weight='bold',
+                                 font_family='Poppins',
+                                 color=colors['Black'])
+                        ]
                     )
+                )
+                ]
+            )
+    )
+
+    def createPopUpCard(title,content,button):
+        return AlertDialog(
+            modal=True,
+            title=title,
+            content=content,
+            actions=button,
+            actions_alignment=MainAxisAlignment.END,
+        )
+    NONEDATA=Container(
+        content=Column(
+            controls=[
+                Text(
+                    "Tidak Ada Data",
+                    weight=FontWeight.BOLD,
+                    size=18,
+                    width=super_page.window_width/100*40
+                ),
+                Text(
+                    "Pilih Nota dari sebelah kiri untuk mulai perubahan",
+                    color=colors["blackAlpha/500"],
+                    width=super_page.window_width/100*40
+                )
+            ],
+            alignment=MainAxisAlignment.START,
+            spacing=10,
+        ),
+        bgcolor="White",
+        # width=super_page.window_width/100*40,
+        # height=super_page.window_height/100*40,
+        padding=padding.all(20)
+    )
+    detailNotaContainer.append(NONEDATA)
+
+    def alertDialogEditingCellCard(e,data):
+        content=Container(
+            content=Column(
+                controls=[
+                    Container(
+                        content=Row(
+                            controls=[
+                                Column(
+                                    controls=[
+                                        Text("Jumlah Laku"),
+                                        TextField()
+                                    ]
+                                ),
+                                Column(
+                                    controls=[
+                                        Text("Jumlah Sisa"),
+                                        TextField()
+                                    ]
+                                )
+                            ]
+                        )
+                    ),
+                    Container(
+                        content=Column(
+                            controls=[
+                                Text("Harga Per Kilo"),
+                                TextField()
+                            ]
+                        )
+                    )
+                ]
+            ),
+            width=super_page.window_width/100*50
+        )
+        card=createPopUpCard(Text("Edit“{}”?".format(data["Barang"])),content,alertYaorBatalkan)
+        super_page.dialog=card
+        card.open=True
+        alertYaorBatalkan[0].on_click=editDataActionYes
+        alertYaorBatalkan[1].on_click=batalkanEditActionEdit
+        super_page.update()
+
+    def listToTable(list,icon_flag):
+        tempList=[]
+        icon_row=[]
+        rowWidth=super_page.window_width/100*40/100*16
+        harga=0
+        for i in list:
+            icon_cells=[
+                IconButton(icon=icons.DELETE,disabled=icon_flag),
+                IconButton(icon=icons.EDIT,disabled=icon_flag,on_click=lambda e : alertDialogEditingCellCard(e,i))
+            ]
+            icon_row.append(icon_cells)
+            tempList.append(
+                DataRow(
+                    cells=[
+                        DataCell(Text(str(i["No"]),width=rowWidth)),
+                        DataCell(Text(i["Barang"],width=rowWidth)),
+                        DataCell(Text(str(i["Kuantitas"]),width=rowWidth)),
+                        DataCell(Text("{}%".format(i["Diskon"]),width=rowWidth)),
+                        DataCell(Text("Rp.{}".format(i["Harga"]),width=rowWidth)),
+                        DataCell(Row(
+                            controls=icon_cells
+                        ))
+                    ]
+                )
+            )
+            harga+=i["Harga"]*i["Kuantitas"]*(1-i["Diskon"]/100)
+        tempList.append(
+            DataRow(
+                cells=[
+                    DataCell(Text("Total")),
+                    DataCell(Text("")),
+                    DataCell(Text("")),
+                    DataCell(Text("")),
+                    DataCell(Text("Rp.{}".format(harga),width=rowWidth)),
+                    DataCell(Text(""))
                 ]
             )
         )
-    )
+        return tempList,icon_row
 
-    mainpage = Container(
-        width=OS_WIDTH,
-        height=OS_HEIGHT,
-        margin=margin.only(top=50, left=80),
-        bgcolor=colors["White"],
+    def createNotaTableCard(header,data,button,tableRow,pulang):
+        bottomCard=Row(
+            controls=button,
+            alignment=MainAxisAlignment.CENTER,
+            spacing=5
+        )
+        if pulang:
+            rowDesc=[
+                Text(
+                    "{}".format(header),
+                    weight=FontWeight.BOLD,
+                    size=18
+                ),
+                Container(
+                    content=Row(
+                        controls=[
+                            Text(
+                                "ID Nota : {}".format(data["IdNotaPulang"]),
+                                color=colors["blackAlpha/500"]
+                            ),
+                            Text(
+                                "Kasir : {}".format(data["KasirPulang"]),
+                                color=colors["blackAlpha/500"]
+                            )
+                        ],
+                        alignment=MainAxisAlignment.SPACE_BETWEEN
+                    ),
+                    width=super_page.window_width/100*40,
+                )
+            ]
+        else:
+            rowDesc=[
+                Text(
+                    "{}".format(header),
+                    weight=FontWeight.BOLD,
+                    size=18
+                ),
+                Container(
+                    content=Row(
+                        controls=[
+                            Text(
+                                "ID Nota : {}".format(data["IdNota"]),
+                                color=colors["blackAlpha/500"]
+                            ),
+                            Text(
+                                "Kasir : {}".format(data["Kasir"]),
+                                color=colors["blackAlpha/500"]
+                            )
+                        ],
+                        alignment=MainAxisAlignment.SPACE_BETWEEN
+                    ),
+                    width=super_page.window_width/100*40,
+                ),
+                Container(
+                    content=Row(
+                        controls=[
+                            Text(
+                                "Sales : {}".format(data["Sales"]),
+                                color=colors["blackAlpha/500"]
+                            ),
+                            Text(
+                                "Tanggal Nota: {}".format(data["Time"]),
+                                color=colors["blackAlpha/500"]
+                            )
+                        ],
+                        alignment=MainAxisAlignment.SPACE_BETWEEN
+                    ),
+                    width=super_page.window_width/100*40,
+                )
+            ]
+        return Container(
+            content=Column(
+                controls=[*rowDesc,
+                        Container(
+                            content=DataTable(
+                                columns=[
+                                    DataColumn(Text("No",size=12,width=super_page.window_width/100*40/100*16,color=colors["Gray/400"])),
+                                    DataColumn(Text("Barang",size=12,width=super_page.window_width/100*40/100*16,color=colors["Gray/400"])),
+                                    DataColumn(Text("Kuantitas",size=12,width=super_page.window_width/100*40/100*16,color=colors["Gray/400"])),
+                                    DataColumn(Text("Diskon",size=12,width=super_page.window_width/100*40/100*16,color=colors["Gray/400"])),
+                                    DataColumn(Text("Harga",size=12,width=super_page.window_width/100*40/100*16,color=colors["Gray/400"])),
+                                    DataColumn(Text("Aksi",size=12,width=super_page.window_width/100*40/100*16,color=colors["Gray/400"])),
+                                ],
+                                width=super_page.window_width/100*40,
+                                column_spacing=0,
+                                rows=tableRow
+                            ),
+                            alignment=alignment.center
+                        ),
+                        Container(
+                            content=bottomCard,
+                            width=super_page.window_width/100*40,
+                        )
+                    
+                    ],
+                    alignment=MainAxisAlignment.START,
+                    spacing=10
+                ),
+                bgcolor="White",
+                # width=super_page.window_width/100*40,
+                # height=super_page.window_height/100*40,
+                padding=padding.all(20)
+            ),bottomCard
+
+    detailNotaContainer = []
+
+    detailNotaButton=[
+        TextButton(
+            "Proses Nota",
+            style=style_selectable,
+            width=super_page.window_width/100*40/100*32
+        ),
+        TextButton(
+            "Kosongkan Nota",
+            style=style_selectable,
+            width=super_page.window_width/100*40/100*32,
+        ),
+        TextButton(
+            "Hapus Nota",
+            style=style_selectable,
+            width=super_page.window_width/100*40/100*32
+        )
+    ]
+
+    def dataToDetailNotaBerlangsung(data):
+            rows_table,icon_row=listToTable(dummy_data,True)
+            detailNotaContainer.clear()
+            DetailNota,cardBottom=createNotaTableCard("DetailNota",data,detailNotaButton,rows_table,False)
+            detailNotaContainer.append(DetailNota)
+           
+
+
+    body=Container(
         content=Row(
             controls=[
-                Column([searchbar_header, dummy_data]),
-                Column([detail_nota])
-            ]
-        ),
+                Container(
+                    content=Column(
+                        controls=[
+                            Row(
+                                alignment=MainAxisAlignment.SPACE_BETWEEN,
+                                # vertical_alignment=CrossAxisAlignment.START,
+                                controls=[
+                                    Text(
+                                "Varian Kopi",
+                                weight=FontWeight.BOLD,
+                                size=24,
+                                color=colors['Black'],
+                            ),
+                                    Text(
+                                "2 Varian Tersedia",
+                                weight=FontWeight.W_500,
+                                size=16,
+                                color=colors['blackAlpha/500'],
+                                    )
+                                ]
+                                
+                            ),
+                            
+                            TextField(
+                                label="Cari produk",
+                                bgcolor=colors["Primary/100"],
+                                border_radius=border_radius.all(25),
+                                border_color=colors["Primary/100"],
+                                prefix_icon=icons.SEARCH,
+                                color=colors["Primary/900"],
+                            ),
+                            Text("NANTI DISINI ADA FILTER COMING SOON!"),
+
+                        ],
+                        spacing=30
+                    ),
+                    bgcolor="White",
+                    width=super_page.window_width/100*40,
+                    padding=padding.all(20),
+                    height=super_page.window_height*90/100-150
+                ),
+                Container(
+                    bgcolor=colors['Black'],
+                    content=Column(
+                        controls=[
+                            detail_nota
+                        ]
+                    ),
+                )
+            ],
+            alignment=MainAxisAlignment.SPACE_EVENLY,
+            vertical_alignment=CrossAxisAlignment.START
+        )
+        ,bgcolor=colors["Gray/50"],
+        width=super_page.window_width,
+        height=super_page.window_height-150,
+        padding=padding.only(top=20)
     )
 
-    page.add(mainpage)
+    # page.add(mainpage)
+    view.controls.append(body)
 
-
-app(target=main)  #ma
+if __name__ == "__main__":
+    app(target=main)  
