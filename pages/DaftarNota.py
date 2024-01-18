@@ -316,15 +316,18 @@ def main(view:View,super_page:Page):
                                     controls=[
                                         Text("Jumlah Laku"),
                                         TextField()
-                                    ]
+                                    ],
+                                    width=super_page.window_width/100*50/100*45
                                 ),
                                 Column(
                                     controls=[
                                         Text("Jumlah Sisa"),
                                         TextField()
-                                    ]
+                                    ],
+                                    width=super_page.window_width/100*50/100*45,
                                 )
-                            ]
+                            ],
+                            spacing=10
                         )
                     ),
                     Container(
@@ -332,12 +335,17 @@ def main(view:View,super_page:Page):
                             controls=[
                                 Text("Harga Per Kilo"),
                                 TextField()
-                            ]
+                            ],
+                            width=super_page.window_width/100*50/100*90+10
                         )
                     )
-                ]
+                ],
             ),
-            width=super_page.window_width/100*50
+            width=super_page.window_width/100*50,
+            height=200,
+            expand=True,
+            padding=padding.all(0),
+
         )
         card=createPopUpCard(Text("Edit“{}”?".format(data["Barang"])),content,alertYaorBatalkan)
         super_page.dialog=card

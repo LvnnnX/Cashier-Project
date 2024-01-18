@@ -33,7 +33,7 @@ def main(page: Page):
         # inverse_surface="#FFFFFF",
         # inverse_primary="#FFFFFF",
         #ngatur warna bg overlay
-        surface_tint=COLOUR_JSON["Primary/500"],
+        surface_tint=COLOUR_JSON["White"],
     )
     page.theme=Theme(color_scheme=theme)
     def route_change(route): 
