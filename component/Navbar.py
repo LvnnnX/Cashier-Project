@@ -1,7 +1,7 @@
 import sys
 sys.path.append('../')
 from utils.libs import *
-from utils.importer import load_colors
+from utils.importer import *
 colors = load_colors()
 hash_route={
     "/NotaBaru":0,
@@ -192,9 +192,5 @@ class Navbar(Container):
         self.content.controls[1].controls[1].width=self.width/100*60/100*20
         self.content.controls[1].controls[2].width=self.width/100*60/100*20
         self.content.controls[1].controls[3].width=self.width/100*60/100*20
-<<<<<<< HEAD
         self.content.controls[1].controls[4].width=self.width/100*60/100*20
 
-=======
-        self.content.controls[1].controls[4].width=self.width/100*60/100*20
->>>>>>> fc2b646baaeeb190c6eab9a50ed464d1b77c2657

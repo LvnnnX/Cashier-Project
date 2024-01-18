@@ -3,8 +3,8 @@ from utils.importer import *
 import pages.LoginPage as lg
 import pages.DaftarNota as dn
 import component.Navbar as nv
-import pages.Order as nb
 import pages.admin as ad
+import pages.Order as nb
 
 def main(page: Page):
     COLOUR_JSON=load_colors()
