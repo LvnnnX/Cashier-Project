@@ -3,6 +3,7 @@ from utils.importer import *
 import pages.LoginPage as lg
 import pages.DaftarNota as dn
 import component.Navbar as nv
+import pages.Order as nb
 import pages.admin as ad
 
 def main(page: Page):
@@ -66,6 +67,15 @@ def main(page: Page):
                 )
             page.views.append(Admin)
             ad.admin_page(Admin,page)
+        elif page.route == "/NotaBaru":
+            NotaBaru=View(
+                    "/NotaBaru",
+                    [
+                        page.haeder,
+                    ],
+                )
+            page.views.append(NotaBaru)
+            nb.main(NotaBaru,page)
         page.update()
 
     def view_pop(view):

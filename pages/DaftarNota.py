@@ -8,7 +8,11 @@ def main(view:View,super_page:Page):
     detailNotaContainer=[]
     changeSizeList=[]
     daftarNotaList=[]
+<<<<<<< HEAD
     super_page.flagDaftarNota=False
+=======
+    super_page.flagDaftarNota=True
+>>>>>>> fc2b646baaeeb190c6eab9a50ed464d1b77c2657
     dummy_data=[
         {
             "No":1,
@@ -74,7 +78,11 @@ def main(view:View,super_page:Page):
         }
     ]
     COLOUR_JSON=load_colors()
+<<<<<<< HEAD
     style_unselected=ButtonStyle(
+=======
+    style_selected=ButtonStyle(
+>>>>>>> fc2b646baaeeb190c6eab9a50ed464d1b77c2657
         shape=RoundedRectangleBorder(radius=0),
         color={
             MaterialState.DEFAULT:COLOUR_JSON["Primary/500"],
@@ -89,7 +97,11 @@ def main(view:View,super_page:Page):
             MaterialState.HOVERED:COLOUR_JSON["Primary/500"],
         }
     )
+<<<<<<< HEAD
     style_selected=ButtonStyle(
+=======
+    style_unselected=ButtonStyle(
+>>>>>>> fc2b646baaeeb190c6eab9a50ed464d1b77c2657
         shape=RoundedRectangleBorder(radius=0),
         color=COLOUR_JSON["White"],
         side=BorderSide(1,COLOUR_JSON["Primary/500"]),
@@ -234,16 +246,26 @@ def main(view:View,super_page:Page):
     )
     detailNotaContainer.append(NONEDATA)
     def clicked_nota_berlangsung(e):
+<<<<<<< HEAD
         daftar_nota_button[0].style=style_unselected
         daftar_nota_button[1].style=style_selected
+=======
+        daftar_nota_button[0].style=style_selected
+        daftar_nota_button[1].style=style_unselected
+>>>>>>> fc2b646baaeeb190c6eab9a50ed464d1b77c2657
         super_page.flagDaftarNota=True
         detailNotaContainer.clear()
         detailNotaContainer.append(NONEDATA)
         enableNotaButton([0,1,2])
         super_page.update()
     def clicked_nota_NotaSelesai(e):
+<<<<<<< HEAD
         daftar_nota_button[0].style=style_selected
         daftar_nota_button[1].style=style_unselected
+=======
+        daftar_nota_button[0].style=style_unselected
+        daftar_nota_button[1].style=style_selected
+>>>>>>> fc2b646baaeeb190c6eab9a50ed464d1b77c2657
         super_page.flagDaftarNota=False
         detailNotaContainer.clear()
         detailNotaContainer.append(NONEDATA)
@@ -316,18 +338,28 @@ def main(view:View,super_page:Page):
                                     controls=[
                                         Text("Jumlah Laku"),
                                         TextField()
+<<<<<<< HEAD
                                     ],
                                     width=super_page.window_width/100*50/100*45
+=======
+                                    ]
+>>>>>>> fc2b646baaeeb190c6eab9a50ed464d1b77c2657
                                 ),
                                 Column(
                                     controls=[
                                         Text("Jumlah Sisa"),
                                         TextField()
+<<<<<<< HEAD
                                     ],
                                     width=super_page.window_width/100*50/100*45,
                                 )
                             ],
                             spacing=10
+=======
+                                    ]
+                                )
+                            ]
+>>>>>>> fc2b646baaeeb190c6eab9a50ed464d1b77c2657
                         )
                     ),
                     Container(
@@ -335,6 +367,7 @@ def main(view:View,super_page:Page):
                             controls=[
                                 Text("Harga Per Kilo"),
                                 TextField()
+<<<<<<< HEAD
                             ],
                             width=super_page.window_width/100*50/100*90+10
                         )
@@ -346,6 +379,14 @@ def main(view:View,super_page:Page):
             expand=True,
             padding=padding.all(0),
 
+=======
+                            ]
+                        )
+                    )
+                ]
+            ),
+            width=super_page.window_width/100*50
+>>>>>>> fc2b646baaeeb190c6eab9a50ed464d1b77c2657
         )
         card=createPopUpCard(Text("Edit“{}”?".format(data["Barang"])),content,alertYaorBatalkan)
         super_page.dialog=card
