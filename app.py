@@ -21,7 +21,7 @@ def main(page: Page):
         # tertiary="#FFFFFF",
         # tertiary_container="#FFFFFF",
         # on_tertiary="#FFFFFF",
-        # background='#FFFFFF',
+        background=COLOUR_JSON["Gray/50"],
         # on_background="#FFFFFF",
         # surface="#FFFFFF",
         # on_surface="#FFFFFF",
@@ -49,16 +49,19 @@ def main(page: Page):
                 ],
             )
         )
-        if page.route == "/DaftarNota":
+        regex=r"(^/)?([^/]*)(/|$)"
+        match = re.search(regex, page.route)
+        route=match.group(2)
+        if route == "DaftarNota":
             DaftarNota=View(
-                    "/DaftarNota",
+                    "/DaftarNota/:UserId",
                     [
                         page.haeder,
                     ],
                 )
             page.views.append(DaftarNota)
             dn.main(DaftarNota,page)
-        elif page.route == "/Admin":
+        elif route == "Admin":
             Admin=View(
                     "/Admin",
                     [
@@ -67,7 +70,7 @@ def main(page: Page):
                 )
             page.views.append(Admin)
             ad.admin_page(Admin,page)
-        elif page.route == "/NotaBaru":
+        elif route == "NotaBaru":
             NotaBaru=View(
                     "/NotaBaru",
                     [
@@ -95,4 +98,4 @@ def main(page: Page):
     page.go(page.route)
     page.on_window_event=window_event_page
 
-app(target=main, view=AppView.WEB_BROWSER)
+app(target=main, view=AppView.WEB_BROWSER,route_url_strategy="hash")

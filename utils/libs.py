@@ -4,6 +4,8 @@ from pathlib import Path
 from screeninfo import get_monitors
 import flet.canvas as cv
 from collections import namedtuple
+import datetime
+import re
 
 BASEDIR = Path(__file__).parent.parent
 JSONPATH = BASEDIR / 'json'

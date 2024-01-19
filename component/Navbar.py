@@ -4,18 +4,20 @@ from utils.libs import *
 from utils.importer import *
 colors = load_colors()
 hash_route={
-    "/NotaBaru":0,
-    "/DaftarNota":1,
-    "/StokdanProduk":2,
-    "/Analitik":3,
-    "/Admin":4,
-    "/":0
+    "NotaBaru":0,
+    "DaftarNota":1,
+    "StokdanProduk":2,
+    "Analitik":3,
+    "Admin":4,
+    "":0
 }
 
 class Navbar(Container):
     def __init__(self,width_change,page_super):
         super().__init__()
-        self.focused_navbar=hash_route[page_super.route]
+        regex=r"(^/)?([^/]*)(/|$)"
+        match = re.search(regex, page_super.route)
+        self.focused_navbar=hash_route[match.group(2)]
         self.super_page=page_super
         self.width=width_change-30
         self.content=Row(
@@ -90,7 +92,7 @@ class Navbar(Container):
                                     MaterialState.HOVERED:colors["Primary/500"],
                                 },
                             ),
-                            on_click=lambda e : page_super.go("/DaftarNota")
+                            on_click=lambda e : page_super.go("/DaftarNota/test")
                         ),
                         TextButton(
                             "Stok dan Produk",
@@ -183,6 +185,7 @@ class Navbar(Container):
         self.padding=0
         self.margin=0
         self.content.controls[1].controls[self.focused_navbar].style.color[MaterialState.DEFAULT]=colors["Primary/500"]
+        self.bgcolor=colors["White"]
     def resize_event(self,page_width):
         self.width=page_width-30
         self.content.controls[0].width=self.width/100*20

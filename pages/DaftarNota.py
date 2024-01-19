@@ -605,8 +605,7 @@ def main(view:View,super_page:Page):
                 )
             )
     daftarNotaListToContainer(dummy_data_id_nota)
-    body=Container(
-        content=Row(
+    body=Row(
             controls=[
                 Container(
                     content=Column(
@@ -649,16 +648,13 @@ def main(view:View,super_page:Page):
                         controls=detailNotaContainer,
                         scroll=ScrollMode.AUTO,
                     ),
+                    height=super_page.window_height*90/100-150
                 )
             ],
             alignment=MainAxisAlignment.SPACE_EVENLY,
             vertical_alignment=CrossAxisAlignment.START
         )
-        ,bgcolor=COLOUR_JSON["Gray/50"],
-        width=super_page.window_width,
-        height=super_page.window_height-150,
-        padding=padding.only(top=20)
-    )
     def changeSizeOnWindowsEvent():
         pass
     view.controls.append(body)
+    view.expand=True
