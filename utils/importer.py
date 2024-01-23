@@ -33,3 +33,7 @@ def getKaryawanByIdKaryawan(IdKaryawan,path=DATAPATH):
     karyawanCsv=pd.read_csv(DATAPATH / "Employee" / "karyawan.csv")
     karyawan=karyawanCsv.loc[karyawanCsv["id_karyawan"]==IdKaryawan]
     return karyawan
+
+def get_screen_size():
+    monitor = get_monitors()[0]
+    return monitor.width, monitor.height

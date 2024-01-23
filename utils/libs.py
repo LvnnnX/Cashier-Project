@@ -8,6 +8,7 @@ import datetime
 import re
 import pandas as pd
 import os
+import locale
 
 BASEDIR = Path(__file__).parent.parent
 JSONPATH = BASEDIR / 'json'

@@ -9,6 +9,7 @@ import pages.Order as nb
 def main(page: Page):
     COLOUR_JSON=load_colors()
     page.title = "Routes Example"
+    page.expand = True
     theme=ColorScheme(
         # primary="#FFFFFF",
         # on_primary="#FFFFFF",
@@ -38,7 +39,7 @@ def main(page: Page):
         surface_tint=COLOUR_JSON["White"],
     )
     page.theme=Theme(color_scheme=theme)
-    page.theme_mode=ThemeMode.LIGHT
+    page.theme_mode = ThemeMode.LIGHT
     def route_change(route): 
         page.views.clear()
         page.haeder=nv.Navbar(page.window_width,page)  
@@ -88,10 +89,15 @@ def main(page: Page):
         page.go(top_view.route)
 
     def window_event_page(e):
+        # page.width = OS_WIDTH
+        # page.height = OS_HEIGHT
         if e.data in ["resized","unmaximize","maximize"]:
             if page.route in ["/NotaBaru","/DaftarNota","/StokdanProduk","/Analitik","/Admin"]:
                 page.haeder.resize_event(page.window_width)
-                page.update()
+                OS_WIDTH, OS_HEIGHT = get_screen_size()
+                
+        page.go(page.route)
+        page.update()
 
 
     page.on_route_change = route_change
