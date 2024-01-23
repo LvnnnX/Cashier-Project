@@ -2,12 +2,14 @@ from utils.libs import *
 from utils.importer import *
 import pages.LoginPage as lg
 import pages.DaftarNota as dn
-import pages.Order as nb
 import component.Navbar as nv
+# import pages.admin as ad
+import pages.Order as nb
 
 def main(page: Page):
     COLOUR_JSON=load_colors()
     page.title = "Routes Example"
+    page.expand = True
     theme=ColorScheme(
         # primary="#FFFFFF",
         # on_primary="#FFFFFF",
@@ -20,7 +22,7 @@ def main(page: Page):
         # tertiary="#FFFFFF",
         # tertiary_container="#FFFFFF",
         # on_tertiary="#FFFFFF",
-        # background='#FFFFFF',
+        background=COLOUR_JSON["Gray/50"],
         # on_background="#FFFFFF",
         # surface="#FFFFFF",
         # on_surface="#FFFFFF",
@@ -34,9 +36,10 @@ def main(page: Page):
         # inverse_surface="#FFFFFF",
         # inverse_primary="#FFFFFF",
         #ngatur warna bg overlay
-        surface_tint=COLOUR_JSON["Primary/500"],
+        surface_tint=COLOUR_JSON["White"],
     )
     page.theme=Theme(color_scheme=theme)
+    page.theme_mode = ThemeMode.LIGHT
     def route_change(route): 
         page.views.clear()
         page.haeder=nv.Navbar(page.window_width,page)  
@@ -48,16 +51,28 @@ def main(page: Page):
                 ],
             )
         )
-        if page.route == "/DaftarNota":
+        regex=r"(^/)?([^/]*)(/|$)"
+        match = re.search(regex, page.route)
+        route=match.group(2)
+        if route == "DaftarNota":
             DaftarNota=View(
-                    "/DaftarNota",
+                    "/DaftarNota/:UserId",
                     [
                         page.haeder,
                     ],
                 )
             page.views.append(DaftarNota)
             dn.main(DaftarNota,page)
-        if page.route == "/NotaBaru":
+        # elif route == "Admin":
+        #     Admin=View(
+        #             "/Admin",
+        #             [
+        #                 page.haeder,
+        #             ],
+        #         )
+        #     page.views.append(Admin)
+        #     ad.admin_page(Admin,page)
+        elif route == "NotaBaru":
             NotaBaru=View(
                     "/NotaBaru",
                     [
@@ -74,10 +89,15 @@ def main(page: Page):
         page.go(top_view.route)
 
     def window_event_page(e):
+        # page.width = OS_WIDTH
+        # page.height = OS_HEIGHT
         if e.data in ["resized","unmaximize","maximize"]:
             if page.route in ["/NotaBaru","/DaftarNota","/StokdanProduk","/Analitik","/Admin"]:
                 page.haeder.resize_event(page.window_width)
-                page.update()
+                OS_WIDTH, OS_HEIGHT = get_screen_size()
+                
+        page.go(page.route)
+        page.update()
 
 
     page.on_route_change = route_change
@@ -85,4 +105,4 @@ def main(page: Page):
     page.go(page.route)
     page.on_window_event=window_event_page
 
-app(target=main, view=AppView.WEB_BROWSER)
+app(target=main, view=AppView.WEB_BROWSER,route_url_strategy="hash")
