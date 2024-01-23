@@ -141,6 +141,110 @@ def admin_page(view:View,page:Page):
             width=page.window_width/100*40/100*20
         ),
     ]
+
+
+    def notaPulangKasirBaruPopUpButtonActionBatal(e):
+        page.dialog.open=False
+        page.update()
+    def notaPulangKasirBaruPopUpButtonActionYa(e):
+        page.dialog.open=False
+        page.update()
+    def alertDialogKasirBaruPopUp(e):
+        content=Container(
+            content=Column(
+                controls=[
+                    Column(
+                        controls=[
+                            Text("Nama Kasir"),
+                            TextField()
+                        ]
+                    ),
+                    Column(
+                        controls=[
+                            Text("Password"),
+                            TextField()
+                        ]
+                    )
+                ]
+            ),
+            width=page.window_width/100*50,
+            height=page.window_height/100*80
+        )
+        card=createPopUpCard(Text("Tambah Sales?"),content,alertYaorBatalkan)
+        page.dialog=card
+        card.open=True
+        alertYaorBatalkan[0].on_click=notaPulangKasirBaruPopUpButtonActionBatal
+        alertYaorBatalkan[1].on_click=notaPulangKasirBaruPopUpButtonActionYa
+        page.update()  
+
+    kasirBaruButton=[
+        TextButton(
+            "KasirBaru",
+            style=style_selectable,
+            width=page.window_width/100*40/100*20,
+            on_click=alertDialogKasirBaruPopUp
+        )
+    ]
+
+    def notaPulangSalesBaruPopUpButtonActionBatal(e):
+        page.dialog.open=False
+        page.update()
+    def notaPulangSalesBaruPopUpButtonActionYa(e):
+        page.dialog.open=False
+        page.update()
+    def alertDialogSalesBaruPopUp(e):
+        content=Container(
+            content=Column(
+                controls=[
+                    Column(
+                        controls=[
+                            Text("Nama Sales"),
+                            TextField()
+                        ]
+                    ),
+                    Column(
+                        controls=[
+                            Text("Alamat Sales"),
+                            TextField()
+                        ]
+                    ),
+                    Row(
+                        controls=[
+                            Column(
+                                controls=[
+                                    Text("Status"),
+                                    statusDropDown
+                                ]
+                            ),
+                            Column(
+                                controls=[
+                                    Text("No.Hp"),
+                                    TextField()
+                                ]
+                            ),
+                        ]
+                    )
+                ]
+            ),
+            width=page.window_width/100*50,
+            height=page.window_height/100*80
+        )
+        card=createPopUpCard(Text("Tambah Sales?"),content,alertYaorBatalkan)
+        page.dialog=card
+        card.open=True
+        alertYaorBatalkan[0].on_click=notaPulangSalesBaruPopUpButtonActionBatal
+        alertYaorBatalkan[1].on_click=notaPulangSalesBaruPopUpButtonActionYa
+        page.update()  
+
+    salesBaruButton=[
+        TextButton(
+            "Sales Baru",
+            style=style_selectable,
+            width=page.window_width/100*40/100*20,
+            on_click=alertDialogSalesBaruPopUp
+        )
+    ]
+
     def listDictToTableRowAndCol(data,Cellwidth=None,deleteFunction=None,editFunction=None):
         if Cellwidth is None:
             Cellwidth=[(page.window_width-170)/(len(data[0])+3) for _ in range(len(data[0])+2)]
@@ -234,7 +338,7 @@ def admin_page(view:View,page:Page):
                             Column(
                                 controls=[
                                     Text("Status"),
-                                    TextField()
+                                    statusDropDown
                                 ]
                             ),
                             Column(
@@ -256,7 +360,13 @@ def admin_page(view:View,page:Page):
         alertYaorBatalkan[0].on_click=notaPulangEditSalesPopUpButtonActionBatal
         alertYaorBatalkan[1].on_click=notaPulangEditSalesPopUpButtonActionYa
         page.update()  
-
+    statusDropDown=Dropdown(
+        options=[
+            dropdown.Option("Aktif"),
+            dropdown.Option("Tidak Aktif")
+        ],
+        value="Aktif"
+    )
     def notaPulangHapusNotaPopUpButtonActionBatal(e):
         page.dialog.open=False
         page.update()
@@ -274,6 +384,7 @@ def admin_page(view:View,page:Page):
         adminMainButton[structProperty["flag"]].style=style_unselected
         structProperty["flag"]=0
         adminMainButton[structProperty["flag"]].style=style_selected
+        buttonRowInsert.controls=kasirBaruButton
         row,colheader=listDictToTableRowAndCol(dummy_data["ManajemenKasir"],deleteFunction=alertDialogHapusKasirPopUp,editFunction=alertDialogEditKasir)
         table.columns=colheader
         table.rows=row
@@ -284,6 +395,7 @@ def admin_page(view:View,page:Page):
         adminMainButton[structProperty["flag"]].style=style_unselected
         structProperty["flag"]=1
         adminMainButton[structProperty["flag"]].style=style_selected
+        buttonRowInsert.controls=salesBaruButton
         row,colheader=listDictToTableRowAndCol(dummy_data["ManajemenSales"],deleteFunction=alertDialogHapusSalesPopUp,editFunction=alertDialogEditSalesPopUp)
         table.columns=colheader
         table.rows=row
@@ -294,6 +406,7 @@ def admin_page(view:View,page:Page):
         adminMainButton[structProperty["flag"]].style=style_unselected
         structProperty["flag"]=2
         adminMainButton[structProperty["flag"]].style=style_selected
+        buttonRowInsert.controls=[]
         row,colheader=listDictToTableRowAndCol(dummy_data["ManajemenNota"],deleteFunction=alertDialogHapusNotaPopUp,editFunction=lambda e : page.go("/DaftarNota"))
         table.columns=colheader
         table.rows=row
@@ -506,8 +619,10 @@ def admin_page(view:View,page:Page):
     for i in range(lowValue):
         tableBottomSlider.append(TextButton("{}".format(i+1)))
     tableBottomSlider.append(IconButton(icon=icons.ARROW_RIGHT))
-    
     filterRow=[]
+    buttonRowInsert=Row(
+        controls=kasirBaruButton
+    )
     body=Container(
             content=Column(
                 controls=[
@@ -516,6 +631,7 @@ def admin_page(view:View,page:Page):
                         controls=adminMainButton,
                         spacing=0
                     ),
+                    buttonRowInsert,
                     Row(
                         controls=[
                             Row(

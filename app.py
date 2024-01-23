@@ -38,6 +38,7 @@ def main(page: Page):
         surface_tint=COLOUR_JSON["White"],
     )
     page.theme=Theme(color_scheme=theme)
+    page.theme_mode=ThemeMode.LIGHT
     def route_change(route): 
         page.views.clear()
         page.haeder=nv.Navbar(page.window_width,page)  

@@ -1,13 +1,16 @@
 import sys
 sys.path.append('../')
 from utils.libs import *
-from utils.importer import load_colors
+from utils.importer import *
 
 
 def main(view:View,super_page:Page):
     detailNotaContainer=[]
     changeSizeList=[]
-    daftarNotaList=[]
+    daftarNotaList={
+        "berlangsung":[],
+        "selesai":[]
+    }
     super_page.flagDaftarNota=False
     dummy_data=[
         {
@@ -31,48 +34,16 @@ def main(view:View,super_page:Page):
             "Diskon":30,
             "Harga":2743723,
         },
-        {
-            "No":1,
-            "Barang":"Kopi Lanang",
-            "Kuantitas":10,
-            "Diskon":10,
-            "Harga":2743723,
-        }
+        # {
+        #     "No":1,
+        #     "Barang":"Kopi Lanang",
+        #     "Kuantitas":10,
+        #     "Diskon":10,
+        #     "Harga":2743723,
+        # }
     ]
-    dummy_data_id_nota=[
-        {
-            "IdNota":"b332432e",
-            "Time":"14 Februari 2023, 21:01",
-            "Sales":"Teguh",
-            "Kasir":"Misaki",
-            "IdNotaPulang":"ID Nota: kdsf23423",
-            "KasirPulang":"Shira",
-        },
-        {
-            "IdNota":"b322432e",
-            "Time":"14 Februari 2023, 20:31",
-            "Sales":"Teguh",
-            "Kasir":"Misaki",
-            "IdNotaPulang":"ID Nota: kdsf23423",
-            "KasirPulang":"Shira",
-        },
-        {
-            "IdNota":"b312432e",
-            "Time":"14 Februari 2023, 20:01",
-            "Sales":"Teguh",
-            "Kasir":"Misaki",
-            "IdNotaPulang":"ID Nota: kdsf23423",
-            "KasirPulang":"Shira",
-        },
-        {
-            "IdNota":"b302432e",
-            "Time":"14 Februari 2023, 19:01",
-            "Sales":"Teguh",
-            "Kasir":"Misaki",
-            "IdNotaPulang":"ID Nota: kdsf23423",
-            "KasirPulang":"Shira",
-        }
-    ]
+    structProperty={}
+    dataIdHeader=loadNotaHeaderByTime("None",datetime.datetime.now())
     COLOUR_JSON=load_colors()
     style_unselected=ButtonStyle(
         shape=RoundedRectangleBorder(radius=0),
@@ -232,6 +203,7 @@ def main(view:View,super_page:Page):
         # height=super_page.window_height/100*40,
         padding=padding.all(20)
     )
+    
     detailNotaContainer.append(NONEDATA)
     def clicked_nota_berlangsung(e):
         daftar_nota_button[0].style=style_unselected
@@ -251,37 +223,80 @@ def main(view:View,super_page:Page):
         super_page.update()
     daftar_nota_button[1].on_click=clicked_nota_berlangsung
     daftar_nota_button[0].on_click=clicked_nota_NotaSelesai
-    def listToTable(list,icon_flag):
+    def listToTableV2(list,icon_flag):
         tempList=[]
         icon_row=[]
+
         rowWidth=super_page.window_width/100*40/100*16
         harga=0
-        for i in list:
+        for index,row in list.iterrows():
+            temp = alertDialogEditingCellCard(row)
             icon_cells=[
                 IconButton(icon=icons.DELETE,disabled=icon_flag),
-                IconButton(icon=icons.EDIT,disabled=icon_flag,on_click=lambda e : alertDialogEditingCellCard(e,i))
+                IconButton(icon=icons.EDIT,disabled=icon_flag,on_click=temp.alert)
             ]
             icon_row.append(icon_cells)
             tempList.append(
                 DataRow(
                     cells=[
-                        DataCell(Text(str(i["No"]),width=rowWidth)),
-                        DataCell(Text(i["Barang"],width=rowWidth)),
-                        DataCell(Text(str(i["Kuantitas"]),width=rowWidth)),
-                        DataCell(Text("{}%".format(i["Diskon"]),width=rowWidth)),
-                        DataCell(Text("Rp.{}".format(i["Harga"]),width=rowWidth)),
+                        DataCell(Text(str(index+1),width=super_page.window_width/100*40/100*4)),
+                        DataCell(Text(row["id_kopi"],width=super_page.window_width/100*40/100*22)),
+                        DataCell(Text(str(row["qty"]),width=super_page.window_width/100*40/100*16)),
+                        DataCell(Text("{}%".format(row["disc"]),width=super_page.window_width/100*40/100*16)),
+                        DataCell(Text("Rp.{}".format(row["harga_satuan"]*row["qty"]*(1-row["disc"]/100)),width=super_page.window_width/100*40/100*22)),
                         DataCell(Row(
                             controls=icon_cells
                         ))
                     ]
                 )
             )
-            harga+=i["Harga"]*i["Kuantitas"]*(1-i["Diskon"]/100)
+            harga+=row["harga_satuan"]*row["qty"]*(1-row["disc"]/100)
         tempList.append(
             DataRow(
                 cells=[
+                    DataCell(Text("")),
                     DataCell(Text("Total")),
                     DataCell(Text("")),
+                    DataCell(Text("")),
+                    DataCell(Text("Rp.{}".format(harga),width=rowWidth)),
+                    DataCell(Text(""))
+                ]
+            )
+        )
+        return tempList,icon_row
+    def listToTable(list,icon_flag):
+        tempList=[]
+        icon_row=[]
+
+        rowWidth=super_page.window_width/100*40/100*16
+        harga=0
+        for i in list:
+            temp = alertDialogEditingCellCard(i)
+            icon_cells=[
+                IconButton(icon=icons.DELETE,disabled=icon_flag),
+                IconButton(icon=icons.EDIT,disabled=icon_flag,on_click=temp.alert)
+            ]
+            icon_row.append(icon_cells)
+            tempList.append(
+                DataRow(
+                    cells=[
+                        DataCell(Text(str(i["No"]),width=super_page.window_width/100*40/100*4)),
+                        DataCell(Text(i["Barang"],width=super_page.window_width/100*40/100*22)),
+                        DataCell(Text(str(i["Kuantitas"]),width=super_page.window_width/100*40/100*16)),
+                        DataCell(Text("{}%".format(i["Diskon"]),width=super_page.window_width/100*40/100*16)),
+                        DataCell(Text("Rp.{}".format(i["Harga"]),width=super_page.window_width/100*40/100*22)),
+                        DataCell(Row(
+                            controls=icon_cells
+                        ))
+                    ]
+                )
+            )
+            harga+=i["Harga"]
+        tempList.append(
+            DataRow(
+                cells=[
+                    DataCell(Text("")),
+                    DataCell(Text("Total")),
                     DataCell(Text("")),
                     DataCell(Text("")),
                     DataCell(Text("Rp.{}".format(harga),width=rowWidth)),
@@ -300,59 +315,64 @@ def main(view:View,super_page:Page):
         detailNotaContainer.append(NONEDATA)
         super_page.update()
     def editDataActionYes(e):
+
         super_page.dialog.open=False
         super_page.update()
     def batalkanEditActionEdit(e):
         super_page.dialog.open=False
         super_page.update()
-    def alertDialogEditingCellCard(e,data):
-        content=Container(
-            content=Column(
-                controls=[
-                    Container(
-                        content=Row(
-                            controls=[
-                                Column(
-                                    controls=[
-                                        Text("Jumlah Laku"),
-                                        TextField()
-                                    ],
-                                    width=super_page.window_width/100*50/100*45
-                                ),
-                                Column(
-                                    controls=[
-                                        Text("Jumlah Sisa"),
-                                        TextField()
-                                    ],
-                                    width=super_page.window_width/100*50/100*45,
-                                )
-                            ],
-                            spacing=10
+    class alertDialogEditingCellCard():
+        def __init__(self,i):
+            self.i=i
+        def alert(self,e):
+            self.jumlahLaku=TextField()
+            self.jumlahSisa=TextField()
+            content=Container(
+                content=Column(
+                    controls=[
+                        Container(
+                            content=Row(
+                                controls=[
+                                    Column(
+                                        controls=[
+                                            Text("Jumlah Laku"),
+                                            self.jumlahLaku
+                                        ],
+                                        width=super_page.window_width/100*50/100*45
+                                    ),
+                                    Column(
+                                        controls=[
+                                            Text("Jumlah Sisa"),
+                                            self.jumlahSisa
+                                        ],
+                                        width=super_page.window_width/100*50/100*45,
+                                    )
+                                ],
+                                spacing=10
+                            )
+                        ),
+                        Container(
+                            content=Column(
+                                controls=[
+                                    Text("Harga Per Kilo"),
+                                    TextField()
+                                ],
+                                width=super_page.window_width/100*50/100*90+10
+                            )
                         )
-                    ),
-                    Container(
-                        content=Column(
-                            controls=[
-                                Text("Harga Per Kilo"),
-                                TextField()
-                            ],
-                            width=super_page.window_width/100*50/100*90+10
-                        )
-                    )
-                ],
-            ),
+                    ],
+                ),
             width=super_page.window_width/100*50,
             height=200,
             expand=True,
             padding=padding.all(0),
-
-        )
-        card=createPopUpCard(Text("Edit“{}”?".format(data["Barang"])),content,alertYaorBatalkan)
-        super_page.dialog=card
-        card.open=True
-        alertYaorBatalkan[0].on_click=editDataActionYes
-        alertYaorBatalkan[1].on_click=batalkanEditActionEdit
-        super_page.update()
+            )
+            card=createPopUpCard(Text("Edit“{}”?".format(self.i["Barang"])),content,alertYaorBatalkan)
+            super_page.dialog=card
+            card.open=True
+            alertYaorBatalkan[0].on_click=editDataActionYes
+            alertYaorBatalkan[1].on_click=batalkanEditActionEdit
+            super_page.update()
     def createNotaTableCard(header,data,button,tableRow,pulang):
         bottomCard=Row(
             controls=button,
@@ -370,11 +390,11 @@ def main(view:View,super_page:Page):
                     content=Row(
                         controls=[
                             Text(
-                                "ID Nota : {}".format(data["IdNotaPulang"]),
+                                "ID Nota : {}".format(data["id_nota"]),
                                 color=COLOUR_JSON["blackAlpha/500"]
                             ),
                             Text(
-                                "Kasir : {}".format(data["KasirPulang"]),
+                                "Kasir : {}".format(data["id_karyawan"]),
                                 color=COLOUR_JSON["blackAlpha/500"]
                             )
                         ],
@@ -394,11 +414,11 @@ def main(view:View,super_page:Page):
                     content=Row(
                         controls=[
                             Text(
-                                "ID Nota : {}".format(data["IdNota"]),
+                                "ID Nota : {}".format(data["id_nota"]),
                                 color=COLOUR_JSON["blackAlpha/500"]
                             ),
                             Text(
-                                "Kasir : {}".format(data["Kasir"]),
+                                "Kasir : {}".format(data["id_karyawan"]),
                                 color=COLOUR_JSON["blackAlpha/500"]
                             )
                         ],
@@ -410,11 +430,11 @@ def main(view:View,super_page:Page):
                     content=Row(
                         controls=[
                             Text(
-                                "Sales : {}".format(data["Sales"]),
+                                "Sales : {}".format(data["id_sales"]),
                                 color=COLOUR_JSON["blackAlpha/500"]
                             ),
                             Text(
-                                "Tanggal Nota: {}".format(data["Time"]),
+                                "Tanggal Nota: {}".format(data["tanggal"]),
                                 color=COLOUR_JSON["blackAlpha/500"]
                             )
                         ],
@@ -429,11 +449,11 @@ def main(view:View,super_page:Page):
                         Container(
                             content=DataTable(
                                 columns=[
-                                    DataColumn(Text("No",size=12,width=super_page.window_width/100*40/100*16,color=COLOUR_JSON["Gray/400"])),
-                                    DataColumn(Text("Barang",size=12,width=super_page.window_width/100*40/100*16,color=COLOUR_JSON["Gray/400"])),
+                                    DataColumn(Text("No",size=12,width=super_page.window_width/100*40/100*4,color=COLOUR_JSON["Gray/400"])),
+                                    DataColumn(Text("Barang",size=12,width=super_page.window_width/100*40/100*22,color=COLOUR_JSON["Gray/400"])),
                                     DataColumn(Text("Kuantitas",size=12,width=super_page.window_width/100*40/100*16,color=COLOUR_JSON["Gray/400"])),
                                     DataColumn(Text("Diskon",size=12,width=super_page.window_width/100*40/100*16,color=COLOUR_JSON["Gray/400"])),
-                                    DataColumn(Text("Harga",size=12,width=super_page.window_width/100*40/100*16,color=COLOUR_JSON["Gray/400"])),
+                                    DataColumn(Text("Harga",size=12,width=super_page.window_width/100*40/100*22,color=COLOUR_JSON["Gray/400"])),
                                     DataColumn(Text("Aksi",size=12,width=super_page.window_width/100*40/100*16,color=COLOUR_JSON["Gray/400"])),
                                 ],
                                 width=super_page.window_width/100*40,
@@ -536,7 +556,7 @@ def main(view:View,super_page:Page):
         super_page.update()
     def createNotaBerlangsungPulang(e,data):
         disableNotaButton([0,1])
-        notaPulangRow,icon_row=listToTable(dummy_data,False)
+        notaPulangRow,icon_row=listToTableV2(structProperty["detaildata"].loc[structProperty["detaildata"]["id_nota_primary"]==data["id_nota_primary"]],False)
         for i in icon_row:
             i[0].visible=False
         NotaPulang,cardBottom=createNotaTableCard("Nota Pulang",data,notaPulangButton,notaPulangRow,True)
@@ -545,7 +565,8 @@ def main(view:View,super_page:Page):
         notaPulangButton[1].on_click=batalkanNotaPulang
         super_page.update()
     def dataToDetailNotaBerlangsung(data):
-        rows_table,icon_row=listToTable(dummy_data,True)
+        structProperty["detaildata"]=loadNotaDetailbyIdNotaPrimary(data["id_nota_primary"],datetime.datetime.now())
+        rows_table,icon_row=listToTableV2(structProperty["detaildata"].loc[structProperty["detaildata"]["id_nota_primary"]==data["id_nota_primary"]],True)
         detailNotaContainer.clear()
         DetailNota,cardBottom=createNotaTableCard("DetailNota",data,detailNotaButton,rows_table,False)
         detailNotaContainer.append(DetailNota)
@@ -555,24 +576,30 @@ def main(view:View,super_page:Page):
         rows_tableDetail,icon_rowDetail=listToTable(dummy_data,True)
         rows_tablePulang,icon_rowPulang=listToTable(dummy_data,True)
         detailNotaContainer.clear()
-        DetailNota,cardBottomDetail=createNotaTableCard("DetailNota",data,[],rows_tableDetail,True)
+        DetailNota,cardBottomDetail=createNotaTableCard("DetailNota",[],[],rows_tableDetail,True)
         detailNotaContainer.append(DetailNota)
-        NotePulang,cardBottomPulang=createNotaTableCard("Nota Pulang",data,detailNotaPulangSelesaiButton,rows_tablePulang,True)
+        NotePulang,cardBottomPulang=createNotaTableCard("Nota Pulang",[],detailNotaPulangSelesaiButton,rows_tablePulang,True)
         detailNotaContainer.append(NotePulang)
         for i in icon_rowPulang:
             i[0].visible=False
         detailNotaPulangSelesaiButton[0].on_click=lambda e : ChangeCardToeditTable(e,cardBottomPulang,icon_rowPulang)
         detailNotaPulangSelesaiButton[1].on_click=alertDialogNotaPulangSelesaiHapus
-    def daftarNotaListToContainer(data):
-        def buttonAction(e,i):
-            if not super_page.flagDaftarNota:
-                dataToDetailNotaBerlangsung(i)
-                super_page.update()
-            else :
-                dataToDetailNotaSelesai(i)
-                super_page.update()
-        for i in data:
-            daftarNotaList.append(
+    class daftarNotaListAction():
+        def __init__(self,data):
+            self.data=data
+        def buttonAction(self,e):
+                if not super_page.flagDaftarNota:
+                    dataToDetailNotaBerlangsung(self.data)
+                    containerDaftarNota.controls=daftarNotaList["berlangsung"]
+                    super_page.update()
+                else :
+                    dataToDetailNotaSelesai(self.data)
+                    containerDaftarNota.controls=daftarNotaList["selesai"]
+                    super_page.update()
+    def daftarNotaListToContainer(data:pd.DataFrame):
+        for index,row in data.loc[data["status_nota"]==0].iterrows():
+            buttonAction=daftarNotaListAction(row)
+            daftarNotaList["berlangsung"].append(
                 Container(
                     bgcolor=COLOUR_JSON["Primary/100"],
                     padding=padding.all(20),
@@ -582,29 +609,68 @@ def main(view:View,super_page:Page):
                             Column(
                                 controls=[
                                     Text(
-                                        "ID Nota: {}".format(i["IdNota"]),
+                                        "ID Nota: {}".format(row["id_nota"]),
                                         weight=FontWeight.W_600
                                     ),
                                     Text(
-                                        "Dibuat pada {}".format(i["Time"]),
+                                        "Dibuat pada {}".format(row["tanggal"]),
                                         weight=FontWeight.W_200
                                     ),
                                     Text(
-                                        "Sales: {}".format(i["Sales"]),
+                                        "Sales: {}".format(row["id_sales"]),
                                         weight="bold"
                                     )
                                 ]
                             ),
                             IconButton(
                                 icon=icons.ARROW_CIRCLE_RIGHT,
-                                on_click=lambda e : buttonAction(e,i)
+                                on_click=buttonAction.buttonAction
                             )
                         ],
                         alignment=MainAxisAlignment.SPACE_BETWEEN
                     )
                 )
             )
-    daftarNotaListToContainer(dummy_data_id_nota)
+        for index,row in data.loc[data["status_nota"]==1].iterrows():
+            buttonAction=daftarNotaListAction(row)
+            daftarNotaList["selesai"].append(
+                Container(
+                    bgcolor=COLOUR_JSON["Primary/100"],
+                    padding=padding.all(20),
+                    border_radius=25,
+                    content=Row(
+                        controls=[
+                            Column(
+                                controls=[
+                                    Text(
+                                        "ID Nota: {}".format(row["id_nota"]),
+                                        weight=FontWeight.W_600
+                                    ),
+                                    Text(
+                                        "Dibuat pada {}".format(row["tanggal"]),
+                                        weight=FontWeight.W_200
+                                    ),
+                                    Text(
+                                        "Sales: {}".format(row["id_sales"]),
+                                        weight="bold"
+                                    )
+                                ]
+                            ),
+                            IconButton(
+                                icon=icons.ARROW_CIRCLE_RIGHT,
+                                on_click=buttonAction.buttonAction
+                            )
+                        ],
+                        alignment=MainAxisAlignment.SPACE_BETWEEN
+                    )
+                )
+            )
+    daftarNotaListToContainer(dataIdHeader)
+    containerDaftarNota=Column(
+        controls=daftarNotaList["berlangsung"],
+        scroll=ScrollMode.AUTO
+        )
+    
     body=Row(
             controls=[
                 Container(
@@ -629,12 +695,9 @@ def main(view:View,super_page:Page):
                             ),
                             Text("NANTI DISINI ADA FILTER COMING SOON!"),
                             Container(
-                                content=Column(
-                                controls=daftarNotaList,
-                                scroll=ScrollMode.AUTO
-                                ),
+                                content=containerDaftarNota,
                                 expand=True
-                            ),
+                            )
                         ],
                         spacing=30
                     ),
