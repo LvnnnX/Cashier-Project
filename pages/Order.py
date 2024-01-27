@@ -5,7 +5,7 @@ from utils.libs import *
 from utils.importer import *
 
 def main(view: View, super_page : Page):
-    COLORS_JSON = load_colors()
+    colors = load_colors()
     # page.title = "Home"
     # page.
     # view.bgcolor = colors["Gray/50"]
@@ -166,16 +166,16 @@ def main(view: View, super_page : Page):
     style_selectable=ButtonStyle(
         shape=RoundedRectangleBorder(radius=10),
         color={
-            MaterialState.DEFAULT:COLORS_JSON["Primary/500"],
-            MaterialState.FOCUSED:COLORS_JSON["White"],
-            MaterialState.HOVERED:COLORS_JSON["White"],
+            MaterialState.DEFAULT:colors["Primary/500"],
+            MaterialState.FOCUSED:colors["White"],
+            MaterialState.HOVERED:colors["White"],
         },
         side=BorderSide(1,colors["Primary/500"]),
         overlay_color='transparent',
         bgcolor={
-            MaterialState.DEFAULT:COLORS_JSON["White"],
-            MaterialState.FOCUSED:COLORS_JSON["Primary/500"],
-            MaterialState.HOVERED:COLORS_JSON["Primary/500"],
+            MaterialState.DEFAULT:colors["White"],
+            MaterialState.FOCUSED:colors["Primary/500"],
+            MaterialState.HOVERED:colors["Primary/500"],
         }
     )
 
@@ -564,14 +564,14 @@ def main(view: View, super_page : Page):
                                         Container(
                                             margin=margin.only(left=15, top=15),
                                             width=100,
-                                            # bgcolor=COLORS_JSON["B_Bg"],
+                                            # bgcolor=colors["B_Bg"],
                                             content=Image(
                                                 src=IMGPATH / "dummy-order1.png"
                                             ),
                                         ),
                                         Container(
                                             width=300 - 100,
-                                            # bgcolor=COLORS_JSON["B_Bg"],
+                                            # bgcolor=colors["B_Bg"],
                                             content=Column(
                                                 [
                                                     Container(
@@ -581,7 +581,7 @@ def main(view: View, super_page : Page):
                                                             value=nama,
                                                             font_family="Poppins",
                                                             size=20,
-                                                            color=COLORS_JSON["Black"],
+                                                            color=colors["Black"],
                                                             weight="bold",
                                                         ),
                                                     ),
@@ -603,7 +603,7 @@ def main(view: View, super_page : Page):
                                                             font_family="Poppins",
                                                             value=f"Rp{changeCurrency(str(harga))}",
                                                             weight="bold",
-                                                            color=COLORS_JSON["Black"],
+                                                            color=colors["Black"],
                                                         ),
                                                     ),
                                                 ]
@@ -622,12 +622,12 @@ def main(view: View, super_page : Page):
         return items_list
 
     searchbar = Container(
-        # bgcolor=COLORS_JSON['Black'],
+        # bgcolor=colors['Black'],
         width=super_page.window_width/100*40-140,
         content=Column(
             controls=[
                 Container(
-                    # bgcolor=COLORS_JSON['Black'],
+                    # bgcolor=colors['Black'],
                     content=
                     Row(
                     alignment=MainAxisAlignment.SPACE_BETWEEN,
@@ -637,14 +637,14 @@ def main(view: View, super_page : Page):
                             "Varian Kopi",
                             weight=FontWeight.BOLD,
                             size=30,
-                            color=COLORS_JSON['Black'],
+                            color=colors['Black'],
                         ),
 
                             Text(
                             "2 Varian Tersedia",
                             weight=FontWeight.W_500,
                             size=16,
-                            color=COLORS_JSON['blackAlpha/500'],
+                            color=colors['blackAlpha/500'],
                             )
                         
                     ]
@@ -673,7 +673,7 @@ def main(view: View, super_page : Page):
                 # Container(
                 #     width=275,
                 #     height=275,
-                #     bgcolor=COLORS_JSON["Accent"],
+                #     bgcolor=colors["Accent"],
                 #     content=Text(
                 #         value='1'
                 #     )
@@ -688,7 +688,7 @@ def main(view: View, super_page : Page):
         # width=super_page.window_width/100*40,
         # height=super_page.window_height-150,
         # margin=margin.only(top=10, left=0),
-        # bgcolor=COLORS_JSON["Black"],
+        # bgcolor=colors["Black"],
         border_radius=10,
         content=
             Column(
@@ -702,7 +702,7 @@ def main(view: View, super_page : Page):
                                  size=26,
                                  weight='bold',
                                  font_family='Poppins',
-                                 color=COLORS_JSON['Black'])
+                                 color=colors['Black'])
                         ]
                     )
                 )
@@ -865,13 +865,13 @@ def main(view: View, super_page : Page):
                                 "Varian Kopi",
                                 weight=FontWeight.BOLD,
                                 size=24,
-                                color=COLORS_JSON['Black'],
+                                color=colors['Black'],
                             ),
                                     Text(
                                 "2 Varian Tersedia",
                                 weight=FontWeight.W_500,
                                 size=16,
-                                color=COLORS_JSON['blackAlpha/500'],
+                                color=colors['blackAlpha/500'],
                                     )
                                 ]
                                 
@@ -879,11 +879,11 @@ def main(view: View, super_page : Page):
                             
                             TextField(
                                 label="Cari produk",
-                                bgcolor=COLORS_JSON["Primary/100"],
+                                bgcolor=colors["Primary/100"],
                                 border_radius=border_radius.all(25),
-                                border_color=COLORS_JSON["Primary/100"],
+                                border_color=colors["Primary/100"],
                                 prefix_icon=icons.SEARCH,
-                                color=COLORS_JSON["Primary/900"],
+                                color=colors["Primary/900"],
                             ),
                             # Text("NANTI DISINI ADA FILTER COMING SOON!"),
                             dummy_data
