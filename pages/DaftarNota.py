@@ -44,6 +44,10 @@ def main(view:View,super_page:Page):
     ]
     structProperty={}
     dataIdHeader=loadNotaHeaderByTime(None,datetime.datetime.now())
+    dataIdHeader=getAndJoinSalesById(dataIdHeader)
+    listNamaSales=getUniqueSalesName()
+    listNamaBarang=getUniqueBarangName()
+    listNamaToko=getUniqueTokoName()
     COLOUR_JSON=load_colors()
     style_unselected=ButtonStyle(
         shape=RoundedRectangleBorder(radius=0),
@@ -164,6 +168,21 @@ def main(view:View,super_page:Page):
             width=super_page.window_width/100*40/100*20
         ),
     ]
+    salesDropOption=[ dropdown.Option(x) for x in listNamaSales]
+    filterDetailNotaBerlangsung=[
+        Dropdown(
+            options=[
+                dropdown.Option("Hari ini"),
+                dropdown.Option("Bulan ini"),
+                dropdown.Option("Tahun ini"),
+            ],
+            width=super_page.window_width/100*40/100*25
+        ),
+        Dropdown(
+            options=salesDropOption,
+            width=super_page.window_width/100*40/100*25
+        )
+    ]
     def disableNotaButton(button):
         for i in button:
             detailNotaButton[i].disabled=True
@@ -242,7 +261,7 @@ def main(view:View,super_page:Page):
                 DataRow(
                     cells=[
                         DataCell(Text(str(index+1),width=super_page.window_width/100*40/100*4)),
-                        DataCell(Text(row["id_stok"],width=super_page.window_width/100*40/100*22)),
+                        DataCell(Text(row["nama"],width=super_page.window_width/100*40/100*22)),
                         DataCell(Text(str(row["qty"]),width=super_page.window_width/100*40/100*16)),
                         DataCell(Text("{}%".format(row["disc"]),width=super_page.window_width/100*40/100*16)),
                         DataCell(Text("Rp.{}".format(row["harga_satuan"]*row["qty"]*(1-row["disc"]/100)),width=super_page.window_width/100*40/100*22)),
@@ -328,7 +347,7 @@ def main(view:View,super_page:Page):
             expand=True,
             padding=padding.all(0),
             )
-            card=createPopUpCard(Text("Edit“{}”?".format(self.i["Barang"])),content,alertYaorBatalkan)
+            card=createPopUpCard(Text("Edit“{}”?".format(self.i["nama"])),content,alertYaorBatalkan)
             super_page.dialog=card
             card.open=True
             alertYaorBatalkan[0].on_click=editDataActionYes
@@ -517,7 +536,10 @@ def main(view:View,super_page:Page):
         super_page.update()
     def createNotaBerlangsungPulang(e,data):
         disableNotaButton([0,1])
-        notaPulangRow,icon_row=listToTableV2(structProperty["detaildata"].loc[structProperty["detaildata"]["id_nota_primary"]==data["id_nota_primary"]],False)
+        structProperty["detailnew"]=loadNotaDetailbyIdNotaPrimary(data["id_nota_primary"],datetime.datetime.now()).reset_index()
+        structProperty["detailnew"]=getAndJoinStokById(structProperty["detailnew"])
+        structProperty["detailnew"]=getAndJoinKopiById(structProperty["detailnew"])
+        notaPulangRow,icon_row=listToTableV2(structProperty["detailnew"].loc[structProperty["detailnew"]["id_nota_primary"]==data["id_nota_primary"]],False)
         for i in icon_row:
             i[0].visible=False
         NotaPulang,cardBottom=createNotaTableCard("Nota Pulang",data,notaPulangButton,notaPulangRow,True)
@@ -526,7 +548,10 @@ def main(view:View,super_page:Page):
         notaPulangButton[1].on_click=batalkanNotaPulang
         super_page.update()
     def dataToDetailNotaBerlangsung(data):
+        enableNotaButton([0,1])
         structProperty["detaildata"]=loadNotaDetailbyIdNotaPrimary(data["id_nota_primary"],datetime.datetime.now()).reset_index()
+        structProperty["detaildata"]=getAndJoinStokById(structProperty["detaildata"])
+        structProperty["detaildata"]=getAndJoinKopiById(structProperty["detaildata"])
         rows_table,icon_row=listToTableV2(structProperty["detaildata"].loc[structProperty["detaildata"]["id_nota_primary"]==data["id_nota_primary"]],True)
         detailNotaContainer.clear()
         DetailNota,cardBottom=createNotaTableCard("DetailNota",data,detailNotaButton,rows_table,False)
@@ -538,8 +563,11 @@ def main(view:View,super_page:Page):
         dataselesaipulang=dataIdHeader.loc[(dataIdHeader["id_nota"]==data["id_nota"]) & (dataIdHeader["jenis_transaksi"]==1) ]
         structProperty["detaildata"]=loadNotaDetailbyIdNotaPrimary(dataselesaiambil.iloc[0]["id_nota_primary"],datetime.datetime.now()).reset_index()
         structProperty["pulangdata"]=loadNotaDetailbyIdNotaPrimary(dataselesaipulang.iloc[0]["id_nota_primary"],datetime.datetime.now()).reset_index()
+        structProperty["detaildata"]=getAndJoinStokById(structProperty["detaildata"])
+        structProperty["pulangdata"]=getAndJoinStokById(structProperty["pulangdata"])
+        structProperty["detaildata"]=getAndJoinKopiById(structProperty["detaildata"])
+        structProperty["pulangdata"]=getAndJoinKopiById(structProperty["pulangdata"])
         rows_tableDetail,icon_rowDetail=listToTableV2(structProperty["detaildata"],True)
-        # dataPulang=data.loc[data["id_nota"]]
         rows_tablePulang,icon_rowPulang=listToTableV2(structProperty["pulangdata"],True)
         detailNotaContainer.clear()
         DetailNota,cardBottomDetail=createNotaTableCard("DetailNota",data,[],rows_tableDetail,True)
@@ -581,7 +609,7 @@ def main(view:View,super_page:Page):
                                         weight=FontWeight.W_200
                                     ),
                                     Text(
-                                        "Sales: {}".format(row["id_sales"]),
+                                        "Sales: {}".format(row["nama"]),
                                         weight="bold"
                                     )
                                 ]
@@ -595,7 +623,7 @@ def main(view:View,super_page:Page):
                     )
                 )
             )
-        for index,row in data.loc[data["status_nota"]==1].iterrows():
+        for index,row in data.loc[(data["status_nota"]==1) & (data["jenis_transaksi"]==0)].iterrows():
             buttonAction=daftarNotaListAction(row)
             daftarNotaList["selesai"].append(
                 Container(
@@ -615,7 +643,7 @@ def main(view:View,super_page:Page):
                                         weight=FontWeight.W_200
                                     ),
                                     Text(
-                                        "Sales: {}".format(row["id_sales"]),
+                                        "Sales: {}".format(row["nama"]),
                                         weight="bold"
                                     )
                                 ]
@@ -657,7 +685,9 @@ def main(view:View,super_page:Page):
                                 prefix_icon=icons.SEARCH,
                                 color=COLOUR_JSON["Primary/900"],
                             ),
-                            Text("NANTI DISINI ADA FILTER COMING SOON!"),
+                            Row(
+                                controls=filterDetailNotaBerlangsung
+                            ),
                             Container(
                                 content=containerDaftarNota,
                                 expand=True
