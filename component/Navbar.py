@@ -92,7 +92,7 @@ class Navbar(Container):
                                     MaterialState.HOVERED:colors["Primary/500"],
                                 },
                             ),
-                            on_click=lambda e : page_super.go("/DaftarNota/test")
+                            on_click=lambda e : page_super.go("/DaftarNota")
                         ),
                         TextButton(
                             "Stok dan Produk",

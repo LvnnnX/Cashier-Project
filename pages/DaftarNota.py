@@ -6,48 +6,54 @@ from utils.importer import *
 
 def main(view:View,super_page:Page):
     detailNotaContainer=[]
-    changeSizeList=[]
     daftarNotaList={
         "berlangsung":[],
         "selesai":[]
     }
     super_page.flagDaftarNota=True
-    dummy_data=[
-        {
-            "No":1,
-            "Barang":"Kopi Lanang",
-            "Kuantitas":10,
-            "Diskon":10,
-            "Harga":2743723,
-        },
-        {
-            "No":2,
-            "Barang":"Kopi Lanang",
-            "Kuantitas":20,
-            "Diskon":30,
-            "Harga":2123723,
-        },
-        {
-            "No":3,
-            "Barang":"Kopi Robusta",
-            "Kuantitas":20,
-            "Diskon":30,
-            "Harga":2743723,
-        },
-        # {
-        #     "No":1,
-        #     "Barang":"Kopi Lanang",
-        #     "Kuantitas":10,
-        #     "Diskon":10,
-        #     "Harga":2743723,
-        # }
-    ]
     structProperty={}
-    dataIdHeader=loadNotaHeaderByTime(None,datetime.datetime.now())
-    dataIdHeader=getAndJoinSalesById(dataIdHeader)
-    listNamaSales=getUniqueSalesName()
-    listNamaBarang=getUniqueBarangName()
-    listNamaToko=getUniqueTokoName()
+    #buat 
+    structProperty["changes"]={
+        "changeAmbil":[],
+        "changeStokAvailable":[],
+        "changeDetailPulang":[],
+        "deleteAmbil":[],
+        "deletePulang":[],
+        "addNotaHeader":[],
+        "changeHeaderStatus":[],
+        "addDetailPulang":[]
+    }
+    #buat fungsi untuk bersihin log nya
+    def clearStuctProperty():
+        structProperty["changes"]["changeAmbil"].clear()
+        structProperty["changes"]["changeStokAvailable"].clear()
+        structProperty["changes"]["changeDetailPulang"].clear()
+        structProperty["changes"]["deleteAmbil"].clear()
+        structProperty["changes"]["deletePulang"].clear()
+        structProperty["changes"]["addNotaHeader"].clear()
+        structProperty["changes"]["changeHeaderStatus"].clear()
+        structProperty["changes"]["addDetailPulang"].clear()
+    def saveChanges():
+        date=datetime.datetime.now()
+        addNotaHeader(structProperty["changes"]["addNotaHeader"],date)
+        addNotaDetailPulang(structProperty["changes"]["addDetailPulang"],date)
+        updateStokAvailableByIdMultiple(structProperty["changes"]["changeStokAvailable"],date)
+        updateNotaHeaderStatusById(structProperty["changes"]["changeHeaderStatus"],date)
+        updateDetailNotaPulangIdStok(structProperty["changes"]["changeDetailPulang"],date)
+        
+    structProperty["headerData"]=loadNotaHeaderByTime(None,datetime.datetime.now())
+    structProperty["headerData"]=getAndJoinSalesById(structProperty["headerData"])
+    listNamaSales=getSeriesIdAndNamaSales()
+    listNamaBarang=getSeriesIdAndNamaKopi()
+    listNamaToko=getSeriesIdAndNamaToko()
+    namaBarangOption=[ dropdown.Option("{} - {}".format(x["id_kopi"],x["nama"])) for _,x in listNamaBarang.iterrows()]
+    namaTokoOption=[ dropdown.Option("{} - {}".format(x["id_toko"],x["nama"])) for _,x in listNamaToko.iterrows()]
+    dropdownNamaBarang=Dropdown(
+        options=namaBarangOption
+    )
+    dropdownNamaToko=Dropdown(
+        options=namaTokoOption
+    )
     COLOUR_JSON=load_colors()
     style_unselected=ButtonStyle(
         shape=RoundedRectangleBorder(radius=0),
@@ -168,7 +174,11 @@ def main(view:View,super_page:Page):
             width=super_page.window_width/100*40/100*20
         ),
     ]
-    salesDropOption=[ dropdown.Option(x) for x in listNamaSales]
+    buttonTambahBarangNotaPulang=TextButton(
+        "Tambah Barang",
+        style=style_selectable,
+    )
+    salesDropOption=[ dropdown.Option("{} - {}".format(x["id_sales"],x["nama"])) for _,x in listNamaSales.iterrows()]
     filterDetailNotaBerlangsung=[
         Dropdown(
             options=[
@@ -244,47 +254,79 @@ def main(view:View,super_page:Page):
         super_page.update()
     daftar_nota_button[0].on_click=clicked_nota_berlangsung
     daftar_nota_button[1].on_click=clicked_nota_NotaSelesai
-    def listToTableV2(list,icon_flag):
-        tempList=[]
+    def listToTableV2(DataFrame,icon_flag,pulang,jenis_transaksi):
+        tempDataFrame=[]
         icon_row=[]
-
         rowWidth=super_page.window_width/100*40/100*16
         harga=0
-        for index,row in list.iterrows():
-            temp = alertDialogEditingCellCard(row)
+        hargaCells=DataCell(Text("",width=rowWidth))
+        for index,row in DataFrame.iterrows():
+            temp = alertDialogEditingCellCard(row,index,DataFrame,jenis_transaksi)
+            temp.hargaCells=hargaCells
+            temp.jenisNotaPulang=pulang
             icon_cells=[
                 IconButton(icon=icons.DELETE,disabled=icon_flag),
                 IconButton(icon=icons.EDIT,disabled=icon_flag,on_click=temp.alert)
             ]
             icon_row.append(icon_cells)
-            tempList.append(
+            if pulang :
+                temp.cells=[
+                    DataCell(Text(str(index+1),width=super_page.window_width/100*40/100*4)),
+                    DataCell(Text(row["nama"],width=super_page.window_width/100*40/100*22)),
+                    DataCell(Text(str(row["qty"]),width=super_page.window_width/100*40/100*12)),
+                    DataCell(Text("Rp.{}".format(row["harga_satuan"]*row["qty"]*(1-row["disc"]/100)),width=super_page.window_width/100*40/100*15)),
+                    DataCell(Text(row["nama_toko"],width=super_page.window_width/100*40/100*15))
+                ]
+            else :
+                temp.cells=[
+                    DataCell(Text(str(index+1),width=super_page.window_width/100*40/100*4)),
+                    DataCell(Text(row["nama"],width=super_page.window_width/100*40/100*22)),
+                    DataCell(Text(str(row["qty"]),width=super_page.window_width/100*40/100*12)),
+                    DataCell(Text("{}%".format(row["disc"]),width=super_page.window_width/100*40/100*12)),
+                    DataCell(Text("Rp.{}".format(row["harga_satuan"]*row["qty"]*(1-row["disc"]/100)),width=super_page.window_width/100*40/100*15)),
+                ]
+            tempDataFrame.append(
                 DataRow(
                     cells=[
-                        DataCell(Text(str(index+1),width=super_page.window_width/100*40/100*4)),
-                        DataCell(Text(row["nama"],width=super_page.window_width/100*40/100*22)),
-                        DataCell(Text(str(row["qty"]),width=super_page.window_width/100*40/100*16)),
-                        DataCell(Text("{}%".format(row["disc"]),width=super_page.window_width/100*40/100*16)),
-                        DataCell(Text("Rp.{}".format(row["harga_satuan"]*row["qty"]*(1-row["disc"]/100)),width=super_page.window_width/100*40/100*22)),
+                        *(temp.cells),
                         DataCell(Row(
                             controls=icon_cells
                         ))
                     ]
                 )
             )
-            harga+=row["harga_satuan"]*row["qty"]*(1-row["disc"]/100)
-        tempList.append(
-            DataRow(
-                cells=[
-                    DataCell(Text("")),
-                    DataCell(Text("Total")),
-                    DataCell(Text("")),
-                    DataCell(Text("")),
-                    DataCell(Text("Rp.{}".format(harga),width=rowWidth)),
-                    DataCell(Text(""))
-                ]
+            if jenis_transaksi!=2:
+                harga+=row["harga_satuan"]*row["qty"]*(1-row["disc"]/100)
+            else:
+                harga+=row["harga_satuan"]*row["qty"]
+        hargaCells.content.value="Rp.{}".format(harga)
+        if pulang:
+            tempDataFrame.append(
+                DataRow(
+                    cells=[
+                        DataCell(Text("")),
+                        DataCell(Text("Total")),
+                        DataCell(Text("")),
+                        hargaCells,
+                        DataCell(Text("")),
+                        DataCell(Text(""))
+                    ]
+                )
             )
-        )
-        return tempList,icon_row
+        else:
+                        tempDataFrame.append(
+                DataRow(
+                    cells=[
+                        DataCell(Text("")),
+                        DataCell(Text("Total")),
+                        DataCell(Text("")),
+                        DataCell(Text("")),
+                        hargaCells,
+                        DataCell(Text(""))
+                    ]
+                )
+            )
+        return tempDataFrame,icon_row
     def batalkanNotaPulang(e):
         enableNotaButton([0,1])
         detailNotaContainer.pop()
@@ -295,18 +337,23 @@ def main(view:View,super_page:Page):
         detailNotaContainer.append(NONEDATA)
         super_page.update()
     def editDataActionYes(e):
-
         super_page.dialog.open=False
         super_page.update()
     def batalkanEditActionEdit(e):
         super_page.dialog.open=False
         super_page.update()
     class alertDialogEditingCellCard():
-        def __init__(self,i):
+        def __init__(self,i,index,DataFrame,jenisTransaksi):
             self.i=i
+            self.index=index
+            self.cells=None
+            self.hargaCells=None
+            self.jenisNotaPulang=None
+            self.dataFrame=DataFrame
+            self.jenisTransaksi=jenisTransaksi
         def alert(self,e):
+            self.hargaPerRenceng=TextField()
             self.jumlahLaku=TextField()
-            self.jumlahSisa=TextField()
             content=Container(
                 content=Column(
                     controls=[
@@ -315,15 +362,15 @@ def main(view:View,super_page:Page):
                                 controls=[
                                     Column(
                                         controls=[
-                                            Text("Jumlah Laku"),
-                                            self.jumlahLaku
+                                            Text("Nama Barang"),
+                                            dropdownNamaBarang
                                         ],
                                         width=super_page.window_width/100*50/100*45
                                     ),
                                     Column(
                                         controls=[
-                                            Text("Jumlah Sisa"),
-                                            self.jumlahSisa
+                                            Text("Harga Per Renceng"),
+                                            self.hargaPerRenceng
                                         ],
                                         width=super_page.window_width/100*50/100*45,
                                     )
@@ -332,12 +379,23 @@ def main(view:View,super_page:Page):
                             )
                         ),
                         Container(
-                            content=Column(
-                                controls=[
-                                    Text("Harga Per Kilo"),
-                                    TextField()
-                                ],
-                                width=super_page.window_width/100*50/100*90+10
+                                content=Row(
+                                    controls=[
+                                    Column(
+                                        controls=[
+                                            Text("Nama Toko"),
+                                            dropdownNamaToko
+                                        ],
+                                        width=super_page.window_width/100*50/100*45
+                                    ),
+                                    Column(
+                                        controls=[
+                                            Text("Jumlah Laku"),
+                                            self.jumlahLaku
+                                        ],
+                                        width=super_page.window_width/100*50/100*45
+                                    )
+                                ]
                             )
                         )
                     ],
@@ -350,8 +408,103 @@ def main(view:View,super_page:Page):
             card=createPopUpCard(Text("Edit“{}”?".format(self.i["nama"])),content,alertYaorBatalkan)
             super_page.dialog=card
             card.open=True
-            alertYaorBatalkan[0].on_click=editDataActionYes
-            alertYaorBatalkan[1].on_click=batalkanEditActionEdit
+            alertYaorBatalkan[0].on_click=batalkanEditActionEdit
+            alertYaorBatalkan[1].on_click=self.editDataActionYesRow
+            super_page.update()
+        def editDataActionYesRow(self,e):
+            barang=dropdownNamaBarang.value.split(" - ")
+            toko=dropdownNamaToko.value.split(" - ")
+            harga_satuan=self.hargaPerRenceng.value
+            stok=self.jumlahLaku.value
+            self.dataFrame["nama"][self.index]=barang[1]
+            self.dataFrame["id_kopi"][self.index]=barang[0]
+            self.dataFrame["harga_satuan"][self.index]=int(harga_satuan)
+            self.dataFrame["qty"][self.index]=int(stok)
+            self.cells[1].content.value=barang[1]
+            self.cells[2].content.value=stok
+            newPossibleStok=getLatestStokIdByKopiId(barang[0])
+            self.dataFrame["qty"][self.index]=newPossibleStok
+            # self.cells[3].content.value=barang[0]
+            harga=0
+            if self.jenisTransaksi!=2:
+                self.cells[3].content.value="Rp.{}".format(int(harga_satuan)*int(stok))  
+                for _,row in self.dataFrame.iterrows():
+                    harga+=row["harga_satuan"]*row["qty"]
+            else:
+                self.cells[3].content.value="Rp.{}".format(int(harga_satuan)*int(stok)*(1-self.i["disc"]/100))  
+                for _,row in self.dataFrame.iterrows():
+                    harga+=row["harga_satuan"]*row["qty"]*(1-row["disc"]/100)
+            if self.jenisNotaPulang:
+                self.dataFrame["nama_toko"][self.index]=toko[1]
+                self.dataFrame["id_toko"][self.index]=toko[0]
+                self.cells[4].content.value=toko[1]
+            if not super_page.flagDaftarNota:
+                structProperty["changes"]["changeDetailPulang"].append((self.i["id_nota_detail"],int(self.i["stok"]),int(harga_satuan),self.dataFrame["id_toko"][self.index]))
+                structProperty["changes"]["changeStokAvailable"].append((newPossibleStok,int(self.i["stok"])))
+            structProperty["changes"]["changeStokAvailable"].append((newPossibleStok,-int(stok)))
+            self.dataFrame["total"]=harga
+            self.hargaCells.content.value="Rp.{}".format(harga)
+            super_page.dialog.open=False
+            super_page.update()
+    tambahDialogHargaPerRenceng=TextField()
+    tambahAlertDialogJumlahLaku=TextField()
+    def alertDialogTambahRowNotaPulang(e):
+            content=Container(
+                content=Column(
+                    controls=[
+                        Container(
+                            content=Row(
+                                controls=[
+                                    Column(
+                                        controls=[
+                                            Text("Nama Barang"),
+                                            dropdownNamaBarang
+                                        ],
+                                        width=super_page.window_width/100*50/100*45
+                                    ),
+                                    Column(
+                                        controls=[
+                                            Text("Harga Per Renceng"),
+                                            tambahDialogHargaPerRenceng
+                                        ],
+                                        width=super_page.window_width/100*50/100*45,
+                                    )
+                                ],
+                                spacing=10
+                            )
+                        ),
+                        Container(
+                                content=Row(
+                                    controls=[
+                                    Column(
+                                        controls=[
+                                            Text("Nama Toko"),
+                                            dropdownNamaToko
+                                        ],
+                                        width=super_page.window_width/100*50/100*45
+                                    ),
+                                    Column(
+                                        controls=[
+                                            Text("Jumlah Laku"),
+                                            tambahAlertDialogJumlahLaku
+                                        ],
+                                        width=super_page.window_width/100*50/100*45
+                                    )
+                                ]
+                            )
+                        )
+                    ],
+                ),
+            width=super_page.window_width/100*50,
+            height=200,
+            expand=True,
+            padding=padding.all(0),
+            )
+            card=createPopUpCard(Text("Tambah Barang"),content,alertYaorBatalkan)
+            super_page.dialog=card
+            card.open=True
+            alertYaorBatalkan[0].on_click=batalkanEditActionEdit
+            alertYaorBatalkan[1].on_click=editDataActionYes
             super_page.update()
     def createNotaTableCard(header,data,button,tableRow,pulang):
         bottomCard=Row(
@@ -383,6 +536,20 @@ def main(view:View,super_page:Page):
                     width=super_page.window_width/100*40,
                 )
             ]
+            tableHeader=[
+                DataColumn(Text("No",size=12,width=super_page.window_width/100*40/100*4,color=COLOUR_JSON["Gray/400"])),
+                DataColumn(Text("Barang",size=12,width=super_page.window_width/100*40/100*22,color=COLOUR_JSON["Gray/400"])),
+                DataColumn(Text("Kuantitas",size=12,width=super_page.window_width/100*40/100*12,color=COLOUR_JSON["Gray/400"])),
+                # DataColumn(Text("Diskon",size=12,width=super_page.window_width/100*40/100*12,color=COLOUR_JSON["Gray/400"])),
+                DataColumn(Text("Harga",size=12,width=super_page.window_width/100*40/100*15,color=COLOUR_JSON["Gray/400"])),
+                DataColumn(Text("Toko",size=12,width=super_page.window_width/100*40/100*15,color=COLOUR_JSON["Gray/400"])),
+                DataColumn(Text("Aksi",size=12,width=super_page.window_width/100*40/100*16,color=COLOUR_JSON["Gray/400"])),
+            ]
+            if super_page.flagDaftarNota:
+                buttonTambahBarangNotaPulang.on_click=alertDialogTambahRowNotaPulang
+                rowDesc.append(
+                    buttonTambahBarangNotaPulang
+                )
         else:
             rowDesc=[
                 Text(
@@ -423,19 +590,23 @@ def main(view:View,super_page:Page):
                     width=super_page.window_width/100*40,
                 )
             ]
+            tableHeader=[
+                DataColumn(Text("No",size=12,width=super_page.window_width/100*40/100*4,color=COLOUR_JSON["Gray/400"])),
+                DataColumn(Text("Barang",size=12,width=super_page.window_width/100*40/100*22,color=COLOUR_JSON["Gray/400"])),
+                DataColumn(Text("Kuantitas",size=12,width=super_page.window_width/100*40/100*12,color=COLOUR_JSON["Gray/400"])),
+                DataColumn(Text("Diskon",size=12,width=super_page.window_width/100*40/100*12,color=COLOUR_JSON["Gray/400"])),
+                DataColumn(Text("Harga",size=12,width=super_page.window_width/100*40/100*15,color=COLOUR_JSON["Gray/400"])),
+                # DataColumn(Text("Toko",size=12,width=super_page.window_width/100*40/100*15,color=COLOUR_JSON["Gray/400"])),
+                DataColumn(Text("Aksi",size=12,width=super_page.window_width/100*40/100*16,color=COLOUR_JSON["Gray/400"])),
+            ]
+        
         return Container(
             content=Column(
-                controls=[*rowDesc,
+                controls=[
+                        *rowDesc,
                         Container(
                             content=DataTable(
-                                columns=[
-                                    DataColumn(Text("No",size=12,width=super_page.window_width/100*40/100*4,color=COLOUR_JSON["Gray/400"])),
-                                    DataColumn(Text("Barang",size=12,width=super_page.window_width/100*40/100*22,color=COLOUR_JSON["Gray/400"])),
-                                    DataColumn(Text("Kuantitas",size=12,width=super_page.window_width/100*40/100*16,color=COLOUR_JSON["Gray/400"])),
-                                    DataColumn(Text("Diskon",size=12,width=super_page.window_width/100*40/100*16,color=COLOUR_JSON["Gray/400"])),
-                                    DataColumn(Text("Harga",size=12,width=super_page.window_width/100*40/100*22,color=COLOUR_JSON["Gray/400"])),
-                                    DataColumn(Text("Aksi",size=12,width=super_page.window_width/100*40/100*16,color=COLOUR_JSON["Gray/400"])),
-                                ],
+                                columns=tableHeader,
                                 width=super_page.window_width/100*40,
                                 column_spacing=0,
                                 rows=tableRow
@@ -446,7 +617,6 @@ def main(view:View,super_page:Page):
                             content=bottomCard,
                             width=super_page.window_width/100*40,
                         )
-                    
                     ],
                     alignment=MainAxisAlignment.START,
                     spacing=10
@@ -462,6 +632,8 @@ def main(view:View,super_page:Page):
     def notaPulangSelesaikanNotaPopUpButtonActionYa(e,bottomCard,icon_row):
         for i in icon_row:
             i[1].disabled=True
+        saveChanges()
+        clearStuctProperty()
         bottomCard.controls=detailNotaPulangSelesaiButton
         detailNotaPulangSelesaiButton[0].on_click=lambda e : ChangeCardToeditTable(e,bottomCard,icon_row)
         detailNotaPulangSelesaiButton[1].on_click=alertDialogNotaPulangSelesaiHapus
@@ -470,12 +642,14 @@ def main(view:View,super_page:Page):
     def notaPulangEditingActionbatalkan(e,bottomCard,icon_row):
         for i in icon_row:
             i[1].disabled=True
+        clearStuctProperty()
         bottomCard.controls=detailNotaPulangSelesaiButton
         detailNotaPulangSelesaiButton[0].on_click=lambda e : ChangeCardToeditTable(e,bottomCard,icon_row)
         detailNotaPulangSelesaiButton[1].on_click=alertDialogNotaPulangSelesaiHapus
         super_page.dialog.open=False
         super_page.update()
     def ChangeCardToeditTable(e,bottomCard,icon_row):
+        clearStuctProperty()
         for i in icon_row:
             i[1].disabled=False
         bottomCard.controls=notaPulangEditingButton
@@ -520,57 +694,79 @@ def main(view:View,super_page:Page):
         alertYaorBatalkan[0].on_click=detailNotaBerlangsungHapusPopUpButtonActionBatal
         alertYaorBatalkan[1].on_click=detailNotaBerlangsungHapusPopUpButtonActionYa
         super_page.update()
-    def alertDialogNotaPulangSimpanActionYa(e):
+    def alertDialogNotaPulangSimpanActionYa(e,data):
         selesaikanNotaPulang(e)
+        for index,row in structProperty["detailnew"].iterrows():
+            structProperty["changes"]["addDetailPulang"].append((row["id_nota_detail"],row["id_nota"],row["id_stok"],row["qty"],row["disc"],row["harga_satuan"],row["id_toko"]))
+        #inget rubah id sales kalok udah ada system auth nya
+        structProperty["changes"]["addNotaHeader"].append((data["id_nota"],data["total"],data["status_nota"],data["id_karyawan"],1,data["namapelangan"],data["id_sales"],datetime.datetime.now()))
+        structProperty["changes"]["changeHeaderStatus"].append((data["id_nota"],1))
+        saveChanges()
+        clearStuctProperty()
+        structProperty["headerData"]=loadNotaHeaderByTime(None,datetime.datetime.now())
+        structProperty["headerData"]=getAndJoinSalesById(structProperty["headerData"])
+        daftarNotaListToContainer(structProperty["headerData"])
         super_page.dialog.open=False
         super_page.update()
     def alertDialogNotaPulangSimpanActionBatal(e):
         super_page.dialog.open=False
         super_page.update()
-    def alertDialogNotaPulangSimpan(e):
+    def alertDialogNotaPulangSimpan(e,data):
         card=createPopUpCard(Text("Simpan Perubahan? "),Text("Apakah Anda yakin ingin menyimpan perubahan pada nota?"),alertYaorBatalkan)
+        alertYaorBatalkan[0].on_click=alertDialogNotaPulangSimpanActionBatal
+        alertYaorBatalkan[1].on_click=lambda e : alertDialogNotaPulangSimpanActionYa(e,data)
         super_page.dialog=card
         card.open=True
-        alertYaorBatalkan[0].on_click=alertDialogNotaPulangSimpanActionBatal
-        alertYaorBatalkan[1].on_click=alertDialogNotaPulangSimpanActionYa
         super_page.update()
     def createNotaBerlangsungPulang(e,data):
         disableNotaButton([0,1])
-        structProperty["detailnew"]=loadNotaDetailbyIdNotaPrimary(data["id_nota_primary"],datetime.datetime.now()).reset_index()
+        #bersihin log query buat nanti nyimpen perubahannya
+        clearStuctProperty()
+        structProperty["detailnew"]=loadNotaDetailAmbilbyIdNota(data["id_nota"],datetime.datetime.now()).reset_index()
         structProperty["detailnew"]=getAndJoinStokById(structProperty["detailnew"])
         structProperty["detailnew"]=getAndJoinKopiById(structProperty["detailnew"])
-        notaPulangRow,icon_row=listToTableV2(structProperty["detailnew"].loc[structProperty["detailnew"]["id_nota_primary"]==data["id_nota_primary"]],False)
+        #alertDialogEditingCellCard editing action ya mengisi nama_toko,id_toko bakalan 
+        structProperty["detailnew"]=structProperty["detailnew"].loc[structProperty["detailnew"]["id_nota"]==data["id_nota"]]
+        structProperty["detailnew"]["nama_toko"]=""
+        structProperty["detailnew"]["id_toko"]=""
+        columnOfid=createListofUUID(len(structProperty["detailnew"]))
+        structProperty["detailnew"]["id_nota_detail"]=columnOfid
+        # structProperty["detailnew"]=getAndJoinTokoById(structProperty["detailnew"])
+        notaPulangRow,icon_row=listToTableV2(structProperty["detailnew"],False,True,data["jenis_transaksi"])
         for i in icon_row:
             i[0].visible=False
         NotaPulang,cardBottom=createNotaTableCard("Nota Pulang",data,notaPulangButton,notaPulangRow,True)
         detailNotaContainer.append(NotaPulang)
-        notaPulangButton[0].on_click=alertDialogNotaPulangSimpan
+        notaPulangButton[0].on_click=lambda e : alertDialogNotaPulangSimpan(e,data)
         notaPulangButton[1].on_click=batalkanNotaPulang
         super_page.update()
     def dataToDetailNotaBerlangsung(data):
         enableNotaButton([0,1])
-        structProperty["detaildata"]=loadNotaDetailbyIdNotaPrimary(data["id_nota_primary"],datetime.datetime.now()).reset_index()
+        structProperty["detaildata"]=loadNotaDetailAmbilbyIdNota(data["id_nota"],datetime.datetime.now()).reset_index()
         structProperty["detaildata"]=getAndJoinStokById(structProperty["detaildata"])
         structProperty["detaildata"]=getAndJoinKopiById(structProperty["detaildata"])
-        rows_table,icon_row=listToTableV2(structProperty["detaildata"].loc[structProperty["detaildata"]["id_nota_primary"]==data["id_nota_primary"]],True)
+        # structProperty["detaildata"]=getAndJoinTokoById(structProperty["detaildata"])
+        rows_table,icon_row=listToTableV2(structProperty["detaildata"].loc[structProperty["detaildata"]["id_nota"]==data["id_nota"]],True,False,data["jenis_transaksi"])
         detailNotaContainer.clear()
         DetailNota,cardBottom=createNotaTableCard("DetailNota",data,detailNotaButton,rows_table,False)
         detailNotaContainer.append(DetailNota)
         detailNotaButton[1].on_click=lambda e : createNotaBerlangsungPulang(e,data)
         detailNotaButton[2].on_click=alertDialogDetailNotaBerlangsungHapus
     def dataToDetailNotaSelesai(data):
-        dataselesaiambil=dataIdHeader.loc[(dataIdHeader["id_nota"]==data["id_nota"]) & (dataIdHeader["jenis_transaksi"]==0) ]
-        dataselesaipulang=dataIdHeader.loc[(dataIdHeader["id_nota"]==data["id_nota"]) & (dataIdHeader["jenis_transaksi"]==1) ]
-        structProperty["detaildata"]=loadNotaDetailbyIdNotaPrimary(dataselesaiambil.iloc[0]["id_nota_primary"],datetime.datetime.now()).reset_index()
-        structProperty["pulangdata"]=loadNotaDetailbyIdNotaPrimary(dataselesaipulang.iloc[0]["id_nota_primary"],datetime.datetime.now()).reset_index()
+        dataselesaiambil=structProperty["headerData"].loc[(structProperty["headerData"]["id_nota"]==data["id_nota"]) & (structProperty["headerData"]["jenis_transaksi"]==0) ]
+        dataselesaipulang=structProperty["headerData"].loc[(structProperty["headerData"]["id_nota"]==data["id_nota"]) & (structProperty["headerData"]["jenis_transaksi"]==1) ]
+        structProperty["detaildata"]=loadNotaDetailAmbilbyIdNota(dataselesaiambil.iloc[0]["id_nota"],datetime.datetime.now()).reset_index()
+        structProperty["pulangdata"]=loadNotaDetailPulangbyIdNota(dataselesaipulang.iloc[0]["id_nota"],datetime.datetime.now()).reset_index()
         structProperty["detaildata"]=getAndJoinStokById(structProperty["detaildata"])
         structProperty["pulangdata"]=getAndJoinStokById(structProperty["pulangdata"])
         structProperty["detaildata"]=getAndJoinKopiById(structProperty["detaildata"])
         structProperty["pulangdata"]=getAndJoinKopiById(structProperty["pulangdata"])
-        rows_tableDetail,icon_rowDetail=listToTableV2(structProperty["detaildata"],True)
-        rows_tablePulang,icon_rowPulang=listToTableV2(structProperty["pulangdata"],True)
+        # structProperty["detaildata"]=getAndJoinTokoById(structProperty["detaildata"])
+        structProperty["pulangdata"]=getAndJoinTokoById(structProperty["pulangdata"])
+        rows_tableDetail,icon_rowDetail=listToTableV2(structProperty["detaildata"],True,False,0)
+        rows_tablePulang,icon_rowPulang=listToTableV2(structProperty["pulangdata"],True,True,1)
         detailNotaContainer.clear()
-        DetailNota,cardBottomDetail=createNotaTableCard("DetailNota",data,[],rows_tableDetail,True)
+        DetailNota,cardBottomDetail=createNotaTableCard("DetailNota",data,[],rows_tableDetail,False)
         detailNotaContainer.append(DetailNota)
         NotePulang,cardBottomPulang=createNotaTableCard("Nota Pulang",data,detailNotaPulangSelesaiButton,rows_tablePulang,True)
         detailNotaContainer.append(NotePulang)
@@ -589,6 +785,8 @@ def main(view:View,super_page:Page):
                     dataToDetailNotaBerlangsung(self.data)
                     super_page.update()
     def daftarNotaListToContainer(data:pd.DataFrame):
+        daftarNotaList["berlangsung"].clear()
+        daftarNotaList["selesai"].clear()
         for index,row in data.loc[data["status_nota"]==0].iterrows():
             buttonAction=daftarNotaListAction(row)
             daftarNotaList["berlangsung"].append(
@@ -657,7 +855,7 @@ def main(view:View,super_page:Page):
                     )
                 )
             )
-    daftarNotaListToContainer(dataIdHeader)
+    daftarNotaListToContainer(structProperty["headerData"])
     containerDaftarNota=Column(
         controls=daftarNotaList["berlangsung"],
         scroll=ScrollMode.AUTO
@@ -714,4 +912,3 @@ def main(view:View,super_page:Page):
     def changeSizeOnWindowsEvent():
         pass
     view.controls.append(body)
-    view.expand=True

@@ -1,7 +1,9 @@
 id_nota,total,status_nota,id_karyawan,jenis_transaksi,namapelangan,id_sales,tanggal
-1,10,0,1,0,customer,1,10/1/2024 14:40
+1,10,1,1,0,customer,1,10/1/2024 14:40
 2,10,1,1,0,customer,1,10/1/2024 14:40
 2,10,1,1,1,customer,1,10/1/2024 14:40
-3,10,0,1,0,customer,1,10/1/2024 14:40
+3,10,1,1,0,customer,1,10/1/2024 14:40
 4,10,1,1,0,customer,1,10/1/2024 14:40
 4,10,1,1,1,customer,1,10/1/2024 14:40
+1,10,1,1,1,customer,1,02/02/2024 20:13
+3,10,1,1,1,customer,1,02/02/2024 20:32

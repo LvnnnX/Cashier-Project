@@ -95,7 +95,7 @@ def main(page: Page):
             if page.route in ["/NotaBaru","/DaftarNota","/StokdanProduk","/Analitik","/Admin"]:
                 page.haeder.resize_event(page.window_width)
                 OS_WIDTH, OS_HEIGHT = get_screen_size()
-                
+        
         page.go(page.route)
         page.update()
 

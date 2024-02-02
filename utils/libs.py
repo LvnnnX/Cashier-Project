@@ -9,6 +9,8 @@ import re
 import pandas as pd
 import os
 import locale
+import uuid
+import numpy as np
 
 BASEDIR = Path(__file__).parent.parent
 JSONPATH = BASEDIR / 'json'
