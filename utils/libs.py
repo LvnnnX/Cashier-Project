@@ -7,6 +7,7 @@ from collections import namedtuple
 import datetime
 import locale
 import re
+import pandas as pd
 
 BASEDIR = Path(__file__).parent.parent
 JSONPATH = BASEDIR / 'json'

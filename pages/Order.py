@@ -9,18 +9,36 @@ def main(view: View, super_page : Page):
     # page.title = "Home"
     # page.
     # view.bgcolor = colors["Gray/50"]
-    sales_dummy_data = [{
+    
+    toko_dummy_data = [
+        {
+            'id_toko' : 1,
+            'nama' : 'Toko Rizky',
+            'alamat' : 'Jl. Raya Bogor',
+        },
+        {
+            'id_toko' : 2,
+            'nama' : 'Toko Rizky',
+            'alamat' : 'Jl. Raya Bogor',
+        }
+    ]
+    
+    karyawan_dummy_data = [{
         'id_sales' : 1,
         'nama' : 'Rizky',
         'alamat' : 'Jl. Raya Bogor',
         'no_hp' : '081234567890',
         'status' : 1,
+        'role' : 0,
+        'gaji_default' : 1000000,
     },{
         'id_sales' : 2,
         'nama' : 'Rizky',
         'alamat' : 'Jl. Raya Bogor',
         'no_hp' : '081234567890',
         'status' : 1,
+        'role' : 0,
+        'gaji_default' : 1000000, 
     }]
     
     nota_header_dummy_data = [
@@ -56,6 +74,7 @@ def main(view: View, super_page : Page):
             'harga_satuan' : 100000,
             'discount' : 0,
             'kuantitas' : 1,
+            'id_toko' : 1,
         },
         {
             'id_kopi' : 2,
@@ -64,62 +83,58 @@ def main(view: View, super_page : Page):
             'harga_satuan' : 100000,
             'discount' : 0,
             'kuantitas' : 1,
+            'id_toko' : 1,
         }
     ]
     
+    stok_dummy_data = [
+        {
+            'id_stok' : 1,
+            'id_kopi' : 1,
+            'tanggal_exp' : '2021-08-31 00:00:00',
+            'stok' : 100,
+            'tanggal_masuk' : '2021-08-31 00:00:00',
+        },
+        {
+            'id_stok' : 2,
+            'id_kopi' : 2,
+            'tanggal_exp' : '2021-08-31 00:00:00',
+            'stok' : 100,
+            'tanggal_masuk' : '2021-08-31 00:00:00',
+        }
+    ]
+
     kopi_dummy_data = [
         {
             'id_kopi' : 1,
-            'nama' : 'Kopi Arabika',
-            'harga': 100000,
+            'nama' : 'Kopi Rizky',
+            'harga' : 100000,
+            'biaya_produksi' : 100000,
             'stok' : 100,
-            'foto' : 'kopi_arabika.jpg',
-            'status' : 1,
         },
         {
             'id_kopi' : 2,
-            'nama' : 'Kopi Robusta',
-            'harga': 100000,
-            'stok' : 100,
-            'foto' : 'kopi_arabika.jpg',
-            'status' : 1,
-        },
+            'nama' : 'Kopi Fajar',
+            'harga' : 50000,
+            'biaya_produksi' : 200,
+            'stok' : 150,
+        }
+    ]
+    
+    sales_dummy_data = [
         {
-            'id_kopi' : 3,
-            'nama' : 'Kopi Luwak',
-            'harga': 100000,
-            'stok' : 100,
-            'foto' : 'kopi_arabika.jpg',
-            'status' : 1,
-        },
-        {
-            'id_kopi' : 4,
-            'nama' : 'Kopi Peaberry',
-            'harga': 100000,
-            'stok' : 100,
-            'foto' : 'kopi_arabika.jpg',
-            'status' : 1,
-        },
-        {
-            'id_kopi' : 5,
-            'nama' : 'Kopi Sumatra',
-            'harga': 100000,
-            'stok' : 100,
-            'foto' : 'kopi_arabika.jpg',
+            'id_sales' : 1,
+            'nama' : 'Rizky',
+            'alamat' : 'Jl. Raya Bogor',
+            'no_hp' : '081234567890',
             'status' : 1,
         }
     ]
     
-    kasir_dummy_data = [
-        {
-            'id_kasir' : 1,
-            'nama' : 'Rizky',
-            'password' : '123456',
-            'status' : 1,
-            'email' : 'rizkyhidayat@gmail.com',
-            'isAdmin' : 0,
-        }
-    ]
+    stok_data = pd.DataFrame(stok_dummy_data)
+    kopi_data = pd.DataFrame(kopi_dummy_data)
+    
+    notaContainer = []
     
     def changeCurrency(harga):
         str_harga = ''
@@ -163,6 +178,38 @@ def main(view: View, super_page : Page):
     # page.window_height = OS_HEIGHT
     # # page.window_full_screen = True
     # page.window_focused = True
+    
+    style_JenisNota_selectable=ButtonStyle(
+        shape=RoundedRectangleBorder(radius=0),
+        color={
+            MaterialState.DEFAULT:colors["Primary/500"],
+            MaterialState.FOCUSED:colors["White"],
+            MaterialState.HOVERED:colors["White"],
+        },
+        side = BorderSide(1,colors["Primary/500"]),
+        overlay_color='transparent',
+        bgcolor={
+            MaterialState.DEFAULT:colors["White"],
+            MaterialState.FOCUSED:colors["Primary/500"],
+            MaterialState.HOVERED:colors["Primary/500"],
+        }
+    )
+    
+    style_JenisNota_selected=ButtonStyle(
+        shape=RoundedRectangleBorder(radius=0),
+        color={
+            MaterialState.DEFAULT:colors["White"],
+            MaterialState.FOCUSED:colors["White"],
+            MaterialState.HOVERED:colors["White"],
+        },
+        side=BorderSide(1, colors["Primary/500"]),
+        bgcolor={
+            MaterialState.DEFAULT:colors["Primary/500"],
+            MaterialState.FOCUSED:colors["Primary/500"],
+            MaterialState.HOVERED:colors["Primary/700"],
+        }
+    )
+    
     style_selectable=ButtonStyle(
         shape=RoundedRectangleBorder(radius=10),
         color={
@@ -227,6 +274,22 @@ def main(view: View, super_page : Page):
                         )
 
 
+    daftar_nota_button=[
+        TextButton(
+            "Nota Sales",
+            style=style_JenisNota_selected,
+            width=super_page.window_width/100*40/100*25,
+            disabled=True
+
+        ),
+        TextButton(
+            "Nota Pembelian",
+            style=style_JenisNota_selectable,
+            width=super_page.window_width/100*40/100*25,
+            # disabled=True
+        )
+    ]
+
 
     def TambahBarangPopUp_Card(e,i):
         content = Container(
@@ -256,7 +319,7 @@ def main(view: View, super_page : Page):
                     ),
                 ]
             ),
-            width=super_page.window_width/100*50,
+            width=super_page.window_width/100*30,
             height=super_page.window_height/100*20,
             # bgcolor=colors['White']
         )
@@ -312,36 +375,17 @@ def main(view: View, super_page : Page):
             # on_dismiss=print('Dismissed!'),
         )
 
-    # def yaActionYes(self, e):
-    #     # print('Running')
-    #     if PopUp_JumlahBarangField.value != '' and PopUp_DiskonField.value != '':
-    #         # print(PopUp_JumlahBarangField.value, PopUp_DiskonField.value)
-    #         # isi_column.rows=createNotaRow([makeData(data)], False)[0]
-    #         # print(e.values)
-    #         PopUp_JumlahBarangField.value=''
-    #         PopUp_DiskonField.value=''
-    #         # super_page.update()
-            
-    #     super_page.dialog.open=False
-    #     super_page.update()
-            
-                    
-    # def batalkanEditActionEdit(self, e):
-    #     PopUp_DiskonField.value=''
-    #     PopUp_JumlahBarangField.value=''
-    #     super_page.dialog.open=False
-    #     super_page.update()
-
-
-        
-    # def TambahBarangPopUp(e, data):
-    #     # print(data)
-    #     card=TambahBarangPopUp_Card(e,data)
-    #     super_page.dialog=card
-    #     card.open=True
-    #     alertYaorBatalkan[0].on_click=batalkanEditActionEdit
-    #     alertYaorBatalkan[1].on_click=yaActionYes
-    #     super_page.update()
+    def PopUp_HapusNota_Card(e):
+        return AlertDialog(
+            modal=True,
+            title=Text("Hapus Nota?", weight='bold'),
+            content=Text("Apakah Anda yakin ingin menghapus nota ini?"),
+            actions=alertYaorBatalkan,
+            actions_alignment=MainAxisAlignment.END,
+            # on_dismiss=lambda e: getPopUpData(e),
+            # on_dismiss=print('Dismissed!'),
+        )
+    
 
     class PopUp_Tambah():
         def __init__(self, data):
@@ -498,16 +542,36 @@ def main(view: View, super_page : Page):
             alertYaorBatalkan[0].on_click=self.batalkanEditActionEdit
             alertYaorBatalkan[1].on_click=self.yaActionYes
             super_page.update()
+            
+    class PopUp_HapusNota():
+        def yaActionYes(self, e):
+            isi_column.rows = []
+            super_page.dialog.open=False
+            super_page.update()
+            
+        def batalkanEditActionEdit(self, e):
+            super_page.dialog.open=False
+            super_page.update()
+        
+        def alert(self, e):
+            card = PopUp_HapusNota_Card(e)
+            super_page.dialog=card
+            card.open=True
+            alertYaorBatalkan[0].on_click=self.batalkanEditActionEdit
+            alertYaorBatalkan[1].on_click=self.yaActionYes
+            super_page.update()
+            
 
 
     # for each item, width 250, height 250
     def get_items(N: int = 10, window_width=750, window_height=600):
         items_list = []
-        for key,value in enumerate(kopi_dummy_data):
+        for key,value in stok_data.iterrows():
             # print(i)
-            nama = value['nama']
-            harga = value['harga']
-            stok = value['stok']
+            kopi_now = kopi_data[kopi_data['id_kopi'] == value['id_kopi']]
+            nama = kopi_now['nama'].values[0]
+            harga = kopi_now['harga'].values[0]
+            stok = kopi_now['stok'].values[0]
             # def TambahBarangPopUp(e,nama):
             #     card=TambahBarangPopUp_Card(e,nama)
             #     # print(nama)
@@ -517,7 +581,7 @@ def main(view: View, super_page : Page):
             #     alertYaorBatalkan[1].on_click=yaActionYes
             #     super_page.update()
             # print(nama)
-            temp = PopUp_Tambah(value)
+            temp = PopUp_Tambah(kopi_now.iloc[0])
             
             tambah_button = Container(
                             alignment=alignment.center,
@@ -683,33 +747,6 @@ def main(view: View, super_page : Page):
         ),
     )
 
-    detailNotaContainer = []
-    detail_nota = Container(
-        # width=super_page.window_width/100*40,
-        # height=super_page.window_height-150,
-        # margin=margin.only(top=10, left=0),
-        # bgcolor=colors["Black"],
-        border_radius=10,
-        content=
-            Column(
-                controls=[
-                    Container(
-                    margin=margin.only(top=20),
-                    content=Row(
-                        controls=
-                        [
-                            Text(value='Detail Nota',
-                                 size=26,
-                                 weight='bold',
-                                 font_family='Poppins',
-                                 color=colors['Black'])
-                        ]
-                    )
-                )
-                ]
-            )
-    )
-
     detailNotaButton=[
         TextButton(
             "Proses Nota",
@@ -726,7 +763,9 @@ def main(view: View, super_page : Page):
         #     style=style_selectable,
         #     width=super_page.window_width/100*40/100*32
         # )
-    ]
+    ]   
+        
+    detailNotaButton[1].on_click=PopUp_HapusNota().alert
         
     isi_column=DataTable(
                 columns=[
@@ -848,7 +887,34 @@ def main(view: View, super_page : Page):
         ),
         width=super_page.window_width/100*40,
     )
-                
+    
+    notaContainer.append([Container(content=isi_column,alignment=alignment.center,),detail_nota_button])
+    
+    def Nota_sales_clicked(e):
+        daftar_nota_button[0].style=style_JenisNota_selected
+        daftar_nota_button[0].disabled=True
+        daftar_nota_button[1].style=style_JenisNota_selectable
+        daftar_nota_button[1].disabled=False
+        super_page.flagNotaSales = True
+        notaContainer.clear()
+        notaContainer.append([])
+        super_page.update()
+        
+    def Nota_pembelian_clicked(e):
+        daftar_nota_button[1].style=style_JenisNota_selected
+        daftar_nota_button[1].disabled=True
+        daftar_nota_button[0].style=style_JenisNota_selectable
+        daftar_nota_button[0].disabled=False
+        super_page.flagNotaSales = False
+        notaContainer.clear()
+        notaContainer.append([Container(content=isi_column,alignment=alignment.center,),detail_nota_button])
+        super_page.update()
+
+    daftar_nota_button[0].on_click=Nota_sales_clicked
+    daftar_nota_button[1].on_click=Nota_pembelian_clicked
+
+
+
 
     body=Container(
         content=Row(
@@ -896,20 +962,18 @@ def main(view: View, super_page : Page):
                     height=super_page.window_height*90/100-150
                 ),
                 Container(
-                    # bgcolor=colors['Black'],
+                    # bgcolor=colors['Black']
                     content=Column(
                         controls=[
                             Container(
                                 content=Column(
-                                    controls=[*rowDesc, 
-                                              Container(
-                                                content=isi_column,
-                                                alignment=alignment.center,
-                                                  
-                                              ),
-                                              detail_nota_button,
-                                              ],
-                                        
+                                    controls=[
+                                        Row(
+                                            controls=daftar_nota_button,
+                                            spacing=0,
+                                            ),
+                                        *rowDesc,
+                                        *notaContainer[0]],
                                         alignment=MainAxisAlignment.START,
                                         spacing=10,
                                     ),
