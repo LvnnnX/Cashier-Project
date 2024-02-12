@@ -54,6 +54,21 @@ def getKopiById(IdKopi):
     kopi=kopiCsv.loc[kopiCsv["id_kopi"]==IdKopi]
     return kopi
 
+def getTokoById(Idtoko):
+    tokoCsv=pd.read_csv(DATAPATH / "Toko" / "toko.csv")
+    toko=tokoCsv.loc[tokoCsv["id_toko"]==Idtoko]
+    return toko
+
+def getAmbilById(idAmbil,date:datetime.datetime):
+    Year=date.strftime("%Y")
+    Month=HASHMONTH[int(date.strftime("%m"))-1]
+    Day=date.strftime("%d")
+    ambilCsv=pd.read_csv(DATAPATH / "Coffee" / Year / Month / "ambil.csv")  
+    ambil=ambilCsv.loc[ambilCsv["id_ambil"]==idAmbil]
+    stringStrip='%d/%m/%Y %H:%M'
+    ambil["tanggal_stok"]=ambil["tanggal_stok"].apply(lambda x : datetime.datetime.strptime(x,stringStrip))
+    return ambil.reset_index()
+
 def getAndJoinStokById(dataFrame:pd.DataFrame):
     dataFrame.astype({"id_stok":'str'})
     df=dataFrame.set_index("id_stok")
@@ -63,9 +78,113 @@ def getAndJoinStokById(dataFrame:pd.DataFrame):
     stok=df.join(stokCsv,how='inner',rsuffix="_stok")
     return stok.reset_index()
 
+#listStokQuery(id_ambil,id_stok,tanggal,rowStok)
+#listOfQuery(id_stok,stok)
+def getPossibleStokResolver(idKopi,jumlahPesanan,listOfQuery:list):
+    listOfQueryCopy=listOfQuery.copy()
+    timeNow=datetime.datetime.now()
+    monthStart=datetime.datetime(2024,2,1)
+    diference=relativedelta(timeNow,monthStart).months
+    length_month=min(18,diference)
+    monthIterate=timeNow+relativedelta(months=-length_month)
+    Year=monthIterate.strftime("%Y")
+    Month=HASHMONTH[int(monthIterate.strftime("%m"))-1]
+    bulan=monthIterate
+    pastStok=pd.read_csv(DATAPATH / "Coffee" / Year / Month / "stok.csv")
+    pastStok=pastStok.loc[pastStok["id_kopi"]==idKopi]  
+    #berat banget di komputasi mungkin perlu di adjust
+    #karena aku pengen buat kode nya ku run pas selesai jadi aku perlu nge redo perubahan yang terjadi sebelum kodenya jalan
+    #listOfQuery itu query perubahaan yang terjadi sebelumnya
+    removeList=[]
+    for z in listOfQueryCopy:
+        if len(pastStok.loc[pastStok["id_stok"]==z[0]])>0:
+            pastStok.loc[pastStok["id_stok"]==z[0],"stok"]=pastStok.loc[pastStok["id_stok"]==z[0],"stok"]+z[1]
+            removeList.append(z)
+    for k in removeList:
+        listOfQueryCopy.remove(k)
+    #filtered 0 stok
+    pastStok=pastStok.loc[pastStok["stok"]>0]
+    stok=pastStok.groupby('id_kopi')["stok"].transform(pd.Series.cumsum)
+    pastStok["tanggal"]=bulan
+    pastStok["stok_cum"]=stok
+    #nge buat query untuk neglakuin add data ambil dan stok biar tanggal dan etc bener
+    removeList.clear()
+    if len(pastStok.loc[pastStok["stok_cum"]>=jumlahPesanan])>0:
+        minValue=pastStok.loc[pastStok["stok_cum"]>=jumlahPesanan,"stok_cum"].min()
+        returnedRows=pastStok.loc[pastStok["stok_cum"]<=minValue].drop(["stok_cum"],axis=1)
+        queryOfChange=[]
+        for index,row in returnedRows.iterrows():
+            if jumlahPesanan-row["stok"]>0:
+                jumlahPesanan=jumlahPesanan-row["stok"]
+                rowStok=row["stok"]
+                queryOfChange.append((row["id_stok"],row["tanggal"],rowStok))
+            else:
+                rowStok=jumlahPesanan
+                queryOfChange.append((row["id_stok"],row["tanggal"],rowStok))
+                return queryOfChange
+    for i in range(length_month-1,-1,-1):
+        monthIterate=timeNow+relativedelta(months=-i)
+        Year=monthIterate.strftime("%Y")
+        Month=HASHMONTH[int(monthIterate.strftime("%m"))-1]
+        bulan=monthIterate
+        stokCsv=pd.read_csv(DATAPATH / "Coffee" / Year / Month / "stok.csv") 
+        stokCsv=stokCsv.loc[stokCsv["id_kopi"]==idKopi]
+        #berat banget di komputasi mungkin perlu di adjust
+        for z in listOfQueryCopy:
+            if len(stokCsv.loc[stokCsv["id_stok"]==z[0]])>0:
+                stokCsv.loc[stokCsv["id_stok"]==z[0],"stok"]=stokCsv.loc[stokCsv["id_stok"]==z[0],"stok"]+z[1]
+                removeList.append(z)
+        for k in removeList:
+            listOfQueryCopy.remove(k)
+        removeList.clear()
+        #filtered 0 stok
+        stokCsv=stokCsv.loc[stokCsv["stok"]>0]  
+        stokCsv["tanggal"]=bulan
+        stokCsv["stok_cum"]=0
+        pastStok=pd.concat([pastStok,stokCsv])
+        stok=pastStok.groupby('id_stok')["stok"].transform(pd.Series.cumsum)  
+        pastStok["stok_cum"]=stok 
+        if len(pastStok.loc[pastStok["stok_cum"]>=jumlahPesanan])>0:
+            returnedRows=pastStok.loc[pastStok["stok_cum"]>=jumlahPesanan].drop(["stok_cum"],axis=1)
+            queryOfChange=[]
+            for index,row in returnedRows.iterrows():
+                if jumlahPesanan-row["stok"]>0:
+                    jumlahPesanan=jumlahPesanan-row["stok"]
+                    rowStok=row["stok"]
+                    queryOfChange.append((row["id_stok"],row["tanggal"],rowStok))
+                else:
+                    rowStok=jumlahPesanan
+                    queryOfChange.append((row["id_stok"],row["tanggal"],rowStok))
+                    return queryOfChange
+    return None
+    
+
+
+#listStokQuery([[id_ambil,id_stok,tanggal,rowStok],[...]...])
+def removeAndAddAmbil(listOfQuery,date:datetime.datetime):
+    Year=date.strftime("%Y")
+    Month=HASHMONTH[int(date.strftime("%m"))-1]
+    Day=date.strftime("%d")
+    ambilCsv=pd.read_csv(DATAPATH / "Coffee" / Year / Month / "ambil.csv")
+    changeCsv=ambilCsv
+    for singleQuery in listOfQuery:
+        changeCsv=changeCsv.loc[changeCsv["id_ambil"]!=singleQuery[0][0]]
+        for k in singleQuery:
+            changeCsv.loc[len(changeCsv)]={
+                "id_ambil":k[0],
+                "id_stok":k[1],
+                "tanggal_stok":k[2].strftime("%d/%m/%Y %H:%M"),
+                "jumlah":float(k[3])
+            }
+    changeCsv.to_csv(DATAPATH / "Coffee" / Year / Month / "ambil.csv",index=False)
+    
+
+
 def getAndJoinKopiById(dataFrame:pd.DataFrame):
+    dataFrame["id_kopi"]=dataFrame["id_kopi"].astype(str)
     df=dataFrame.set_index("id_kopi")
     kopiCsv=pd.read_csv(DATAPATH / "Coffee" / "kopi.csv")
+    kopiCsv["id_kopi"]=kopiCsv["id_kopi"].astype(str)
     kopiCsv.set_index("id_kopi",inplace=True)
     kopi=df.join(kopiCsv,how='inner',rsuffix="_kopi")
     return kopi.reset_index()
@@ -78,8 +197,10 @@ def getAndJoinSalesById(dataFrame:pd.DataFrame):
     return sales.reset_index()
 
 def getAndJoinTokoById(dataFrame:pd.DataFrame):
+    dataFrame["id_toko"]=dataFrame["id_toko"].astype(str)
     df=dataFrame.set_index("id_toko")
     tokoCsv=pd.read_csv(DATAPATH / "Toko" / "toko.csv")
+    tokoCsv["id_toko"]=tokoCsv["id_toko"].astype(str)
     tokoCsv.set_index("id_toko",inplace=True)
     toko=df.join(tokoCsv,how='inner',rsuffix="_toko")
     return toko.reset_index()
@@ -112,6 +233,11 @@ def getSeriesIdAndNamaToko():
     uniqueTokoName=df[["id_toko","nama"]]
     return uniqueTokoName
 
+def getKaryawanDataById(IdKaryawan):
+    df=pd.read_csv(DATAPATH/ "Employee" / "Karyawan.csv").set_index("id_karyawan")
+    return df.iloc[IdKaryawan].reset_index()
+
+
 def get_screen_size():
     monitor = get_monitors()[0]
     return monitor.width, monitor.height
@@ -141,17 +267,23 @@ def updateNotaDetailAmbilByIdMultiple(listOfQuery,date:datetime.datetime):
     ambilCsv.to_csv(DATAPATH / "Nota" / Year / Month / "nota_detail_pulang.csv",index=False)
 
 
-#(id_stok,stok) listQueryInput
+#(id_stok,stok,tanggal) listQueryInput
 #id_stok,stok
-def updateStokAvailableByIdMultiple(listOfQuery,date:datetime.datetime):
-    stokCsv=pd.read_csv(DATAPATH / "Coffee" / "stok.csv").set_index("id_stok")
+def updateStokAvailableByIdMultiple(listOfQuery):
+    monthPath=set([])
     for i in listOfQuery:
-        stokCsv["stok"][i[0]]=i[1]+stokCsv["stok"][i[0]]
-    stokCsv.reset_index(inplace=True)
-    stokCsv.to_csv(DATAPATH / "Coffee" / "stok.csv",index=False)
+        monthPath.add(i[2])
+    dictionaryCsv={}
+    for i in monthPath:
+        dictionaryCsv[i]=pd.read_csv(DATAPATH / "Coffee" / i / "stok.csv").set_index("id_stok")
+    for query in listOfQuery:
+        dictionaryCsv[query[2]]["stok"][query[0]]=query[1]+dictionaryCsv[query[2]]["stok"][query[0]]
+    for i in monthPath:
+        dictionaryCsv[i].reset_index(inplace=True)
+        dictionaryCsv[i].to_csv(DATAPATH / "Coffee" / i / "stok.csv",index=False)
 
 
-#(id_nota_detail,id_nota,id_stok,qty,disc,harga_satuan,id_toko)
+#(id_nota_detail,id_nota,id_ambil,qty,disc,harga_satuan,id_toko,id_kopi)
 def addNotaDetailPulang(listOfQuery,date:datetime.datetime):
     Year=date.strftime("%Y")
     Month=HASHMONTH[int(date.strftime("%m"))-1]
@@ -162,11 +294,12 @@ def addNotaDetailPulang(listOfQuery,date:datetime.datetime):
         row={
             "id_nota_detail":i[0],
             "id_nota":i[1],
-            "id_stok":i[2],
+            "id_ambil":i[2],
             "qty":i[3],
             "disc":i[4],
             "harga_satuan":i[5],
-            "id_toko":i[6]
+            "id_toko":i[6],
+            "id_kopi":i[7]
         }
         PulangCsv.loc[len(PulangCsv)]=row
     PulangCsv.reset_index(drop=True,inplace=True)
@@ -215,3 +348,9 @@ def getLatestStokIdByKopiId(IdKopi):
 def createListofUUID(ranges):
     listOfId=[ uuid.uuid4().hex for _ in range(ranges)]
     return listOfId
+
+def datetimeToHashYearMonth(date:datetime.datetime):
+    month=date.strftime('%m')
+    year=date.strftime('%Y')
+    hashedMonth=HASHMONTH[int(month)-1]
+    return os.path.join(year,hashedMonth)

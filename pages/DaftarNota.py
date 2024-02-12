@@ -21,7 +21,8 @@ def main(view:View,super_page:Page):
         "deletePulang":[],
         "addNotaHeader":[],
         "changeHeaderStatus":[],
-        "addDetailPulang":[]
+        "addDetailPulang":[],
+        "addAmbilPulang":[]
     }
     #buat fungsi untuk bersihin log nya
     def clearStuctProperty():
@@ -33,13 +34,15 @@ def main(view:View,super_page:Page):
         structProperty["changes"]["addNotaHeader"].clear()
         structProperty["changes"]["changeHeaderStatus"].clear()
         structProperty["changes"]["addDetailPulang"].clear()
+        structProperty["changes"]["addAmbilPulang"].clear()
     def saveChanges():
         date=datetime.datetime.now()
         addNotaHeader(structProperty["changes"]["addNotaHeader"],date)
         addNotaDetailPulang(structProperty["changes"]["addDetailPulang"],date)
-        updateStokAvailableByIdMultiple(structProperty["changes"]["changeStokAvailable"],date)
+        updateStokAvailableByIdMultiple(structProperty["changes"]["changeStokAvailable"])
         updateNotaHeaderStatusById(structProperty["changes"]["changeHeaderStatus"],date)
         updateDetailNotaPulangIdStok(structProperty["changes"]["changeDetailPulang"],date)
+        removeAndAddAmbil(structProperty["changes"]["addAmbilPulang"],date)
         
     structProperty["headerData"]=loadNotaHeaderByTime(None,datetime.datetime.now())
     structProperty["headerData"]=getAndJoinSalesById(structProperty["headerData"])
@@ -336,7 +339,60 @@ def main(view:View,super_page:Page):
         detailNotaContainer.clear()
         detailNotaContainer.append(NONEDATA)
         super_page.update()
-    def editDataActionYes(e):
+    def TambahEditDataYes(e,data,tableRow):
+        newNotaId=uuid.uuid4().hex
+        newAmbilId=uuid.uuid4().hex
+        #ngambil 1 id_nota,disc header dari data ini karena semua datanya sama
+        notaId=structProperty["pulangdata"]["id_nota"][0]
+        disc=structProperty["pulangdata"]["disc"][0]
+        # data["namaBarang"]=dropdownNamaBarang.value
+        # data["namaToko"]=dropdownNamaToko.value
+        # data["hargaPerenceng"]=tambahDialogHargaPerRenceng.value
+        # data["jumlahLaku"]=tambahAlertDialogJumlahLaku.value
+        listQuery=getPossibleStokResolver(data["namaBarang"][0],int(data["jumlahLaku"]),[])
+        barangDetail=getKopiById(data["namaBarang"][0])
+        tokoDetail=getTokoById(data["namaToko"][0])
+        for i in range(len(listQuery)):
+            listQuery[i]=tuple(newAmbilId)+listQuery[i]
+        tableRow.append()
+        structProperty["changes"]["addAmbilPulang"].append(listQuery)
+        #true berati nota berlangsung
+        if not super_page.flagDaftarNota:
+            structProperty["pulangdata"].loc[len(structProperty["pulangdata"])]={
+                "id_toko":data["namaToko"][0],
+                "id_kopi":data["namaBarang"][0],
+                "index":len(structProperty["pulangdata"]),
+                "id_nota_detail":newNotaId,
+                "id_nota":notaId,
+                "id_ambil":newAmbilId,
+                "qty":int(data["jumlahLaku"]),
+                "disc":disc,
+                "harga_satuan":int(data["hargaPerenceng"]),
+                "nama":barangDetail["nama"][0],
+                "harga":barangDetail["harga"][0],
+                "biaya_produksi":barangDetail["biaya_produksi"][0],
+                "foto":barangDetail["foto"][0],
+                "nama_toko":tokoDetail["nama"],
+                "alamat":tokoDetail["alamat"],
+            }
+        else:
+            structProperty["detailnew"].loc[len(structProperty["detailnew"])]={
+                "id_toko":data["namaToko"][0],
+                "id_kopi":data["namaBarang"][0],
+                "index":len(structProperty["detailnew"]),
+                "id_nota_detail":newNotaId,
+                "id_nota":notaId,
+                "id_ambil":newAmbilId,
+                "qty":int(data["jumlahLaku"]),
+                "disc":disc,
+                "harga_satuan":int(data["hargaPerenceng"]),
+                "nama":barangDetail["nama"][0],
+                "harga":barangDetail["harga"][0],
+                "biaya_produksi":barangDetail["biaya_produksi"][0],
+                "foto":barangDetail["foto"][0],
+                "nama_toko":tokoDetail["nama"],
+                "alamat":tokoDetail["alamat"],
+            }
         super_page.dialog.open=False
         super_page.update()
     def batalkanEditActionEdit(e):
@@ -416,14 +472,38 @@ def main(view:View,super_page:Page):
             toko=dropdownNamaToko.value.split(" - ")
             harga_satuan=self.hargaPerRenceng.value
             stok=self.jumlahLaku.value
+            #undo the latest changes of the same ambil id
+            flagOfAvailableId=True
+            newQuery=[]
+            for k in range(len(structProperty["changes"]["addAmbilPulang"])-1,-1,-1):
+                if str(structProperty["changes"]["addAmbilPulang"][k][0][0])==str(self.i["id_ambil"]):
+                    dataAmbilList=structProperty["changes"]["addAmbilPulang"][k]
+                    for z in dataAmbilList:
+                        newQuery.append((z[1],z[3],datetimeToHashYearMonth(z[2])))
+                    flagOfAvailableId=False
+                    break
+            if flagOfAvailableId:
+                dataAmbil=getAmbilById(self.i["id_ambil"],datetime.datetime.now())
+                for _,row in dataAmbil.iterrows():
+                    newQuery.append((row["id_stok"],int(row["jumlah"]),datetimeToHashYearMonth(row["tanggal_stok"])))
+            listOfAmbilTable=getPossibleStokResolver(int(barang[0]),int(stok),[*structProperty["changes"]["changeStokAvailable"],*newQuery])
+            if listOfAmbilTable is None:
+                print("tidak cukup stok")
+                return
+            for query in newQuery:
+                structProperty["changes"]["changeStokAvailable"].append(query)
+            #change the data in table for the gui
             self.dataFrame["nama"][self.index]=barang[1]
             self.dataFrame["id_kopi"][self.index]=barang[0]
             self.dataFrame["harga_satuan"][self.index]=int(harga_satuan)
             self.dataFrame["qty"][self.index]=int(stok)
             self.cells[1].content.value=barang[1]
             self.cells[2].content.value=stok
-            newPossibleStok=getLatestStokIdByKopiId(barang[0])
-            self.dataFrame["qty"][self.index]=newPossibleStok
+            # newPossibleStok=getLatestStokIdByKopiId(barang[0])
+            # self.dataFrame["qty"][self.index]=stok
+            for z in range(len(listOfAmbilTable)):
+                #append the tuple
+                listOfAmbilTable[z]=tuple([self.i["id_ambil"]])+listOfAmbilTable[z]
             # self.cells[3].content.value=barang[0]
             harga=0
             if self.jenisTransaksi!=2:
@@ -439,16 +519,18 @@ def main(view:View,super_page:Page):
                 self.dataFrame["id_toko"][self.index]=toko[0]
                 self.cells[4].content.value=toko[1]
             if not super_page.flagDaftarNota:
-                structProperty["changes"]["changeDetailPulang"].append((self.i["id_nota_detail"],int(self.i["stok"]),int(harga_satuan),self.dataFrame["id_toko"][self.index]))
-                structProperty["changes"]["changeStokAvailable"].append((newPossibleStok,int(self.i["stok"])))
-            structProperty["changes"]["changeStokAvailable"].append((newPossibleStok,-int(stok)))
+                structProperty["changes"]["changeDetailPulang"].append((self.i["id_nota_detail"],int(self.i["id_ambil"]),int(harga_satuan),self.dataFrame["id_toko"][self.index],barang[0]))
             self.dataFrame["total"]=harga
             self.hargaCells.content.value="Rp.{}".format(harga)
+            structProperty["changes"]["addAmbilPulang"].append(listOfAmbilTable)
+            for k in listOfAmbilTable:
+                structProperty["changes"]["changeStokAvailable"].append((k[1],-k[3],datetimeToHashYearMonth(k[2])))
             super_page.dialog.open=False
             super_page.update()
     tambahDialogHargaPerRenceng=TextField()
     tambahAlertDialogJumlahLaku=TextField()
-    def alertDialogTambahRowNotaPulang(e):
+    def alertDialogTambahRowNotaPulang(e,tableRow):
+            data={}
             content=Container(
                 content=Column(
                     controls=[
@@ -500,11 +582,15 @@ def main(view:View,super_page:Page):
             expand=True,
             padding=padding.all(0),
             )
+            data["namaBarang"]=dropdownNamaBarang.value.split(" - ")
+            data["namaToko"]=dropdownNamaToko.value.split(" - ")
+            data["hargaPerenceng"]=tambahDialogHargaPerRenceng.value
+            data["jumlahLaku"]=tambahAlertDialogJumlahLaku.value
             card=createPopUpCard(Text("Tambah Barang"),content,alertYaorBatalkan)
             super_page.dialog=card
             card.open=True
             alertYaorBatalkan[0].on_click=batalkanEditActionEdit
-            alertYaorBatalkan[1].on_click=editDataActionYes
+            alertYaorBatalkan[1].on_click=lambda e : TambahEditDataYes(e,data,tableRow)
             super_page.update()
     def createNotaTableCard(header,data,button,tableRow,pulang):
         bottomCard=Row(
@@ -546,7 +632,7 @@ def main(view:View,super_page:Page):
                 DataColumn(Text("Aksi",size=12,width=super_page.window_width/100*40/100*16,color=COLOUR_JSON["Gray/400"])),
             ]
             if super_page.flagDaftarNota:
-                buttonTambahBarangNotaPulang.on_click=alertDialogTambahRowNotaPulang
+                buttonTambahBarangNotaPulang.on_click=lambda e : alertDialogTambahRowNotaPulang(e,tableRow)
                 rowDesc.append(
                     buttonTambahBarangNotaPulang
                 )
@@ -577,7 +663,7 @@ def main(view:View,super_page:Page):
                     content=Row(
                         controls=[
                             Text(
-                                "Sales : {}".format(data["id_sales"]),
+                                "Sales : {}".format(data["nama"]),
                                 color=COLOUR_JSON["blackAlpha/500"]
                             ),
                             Text(
@@ -695,9 +781,8 @@ def main(view:View,super_page:Page):
         alertYaorBatalkan[1].on_click=detailNotaBerlangsungHapusPopUpButtonActionYa
         super_page.update()
     def alertDialogNotaPulangSimpanActionYa(e,data):
-        selesaikanNotaPulang(e)
         for index,row in structProperty["detailnew"].iterrows():
-            structProperty["changes"]["addDetailPulang"].append((row["id_nota_detail"],row["id_nota"],row["id_stok"],row["qty"],row["disc"],row["harga_satuan"],row["id_toko"]))
+            structProperty["changes"]["addDetailPulang"].append((row["id_nota_detail"],row["id_nota"],row["id_ambil"],row["qty"],row["disc"],row["harga_satuan"],row["id_toko"],row["id_kopi"],row["id_kopi"]))
         #inget rubah id sales kalok udah ada system auth nya
         structProperty["changes"]["addNotaHeader"].append((data["id_nota"],data["total"],data["status_nota"],data["id_karyawan"],1,data["namapelangan"],data["id_sales"],datetime.datetime.now()))
         structProperty["changes"]["changeHeaderStatus"].append((data["id_nota"],1))
@@ -706,6 +791,7 @@ def main(view:View,super_page:Page):
         structProperty["headerData"]=loadNotaHeaderByTime(None,datetime.datetime.now())
         structProperty["headerData"]=getAndJoinSalesById(structProperty["headerData"])
         daftarNotaListToContainer(structProperty["headerData"])
+        selesaikanNotaPulang(e)
         super_page.dialog.open=False
         super_page.update()
     def alertDialogNotaPulangSimpanActionBatal(e):
@@ -723,7 +809,7 @@ def main(view:View,super_page:Page):
         #bersihin log query buat nanti nyimpen perubahannya
         clearStuctProperty()
         structProperty["detailnew"]=loadNotaDetailAmbilbyIdNota(data["id_nota"],datetime.datetime.now()).reset_index()
-        structProperty["detailnew"]=getAndJoinStokById(structProperty["detailnew"])
+        # structProperty["detailnew"]=getAndJoinStokById(structProperty["detailnew"])
         structProperty["detailnew"]=getAndJoinKopiById(structProperty["detailnew"])
         #alertDialogEditingCellCard editing action ya mengisi nama_toko,id_toko bakalan 
         structProperty["detailnew"]=structProperty["detailnew"].loc[structProperty["detailnew"]["id_nota"]==data["id_nota"]]
@@ -743,7 +829,7 @@ def main(view:View,super_page:Page):
     def dataToDetailNotaBerlangsung(data):
         enableNotaButton([0,1])
         structProperty["detaildata"]=loadNotaDetailAmbilbyIdNota(data["id_nota"],datetime.datetime.now()).reset_index()
-        structProperty["detaildata"]=getAndJoinStokById(structProperty["detaildata"])
+        # structProperty["detaildata"]=getAndJoinStokById(structProperty["detaildata"])
         structProperty["detaildata"]=getAndJoinKopiById(structProperty["detaildata"])
         # structProperty["detaildata"]=getAndJoinTokoById(structProperty["detaildata"])
         rows_table,icon_row=listToTableV2(structProperty["detaildata"].loc[structProperty["detaildata"]["id_nota"]==data["id_nota"]],True,False,data["jenis_transaksi"])
@@ -757,12 +843,13 @@ def main(view:View,super_page:Page):
         dataselesaipulang=structProperty["headerData"].loc[(structProperty["headerData"]["id_nota"]==data["id_nota"]) & (structProperty["headerData"]["jenis_transaksi"]==1) ]
         structProperty["detaildata"]=loadNotaDetailAmbilbyIdNota(dataselesaiambil.iloc[0]["id_nota"],datetime.datetime.now()).reset_index()
         structProperty["pulangdata"]=loadNotaDetailPulangbyIdNota(dataselesaipulang.iloc[0]["id_nota"],datetime.datetime.now()).reset_index()
-        structProperty["detaildata"]=getAndJoinStokById(structProperty["detaildata"])
-        structProperty["pulangdata"]=getAndJoinStokById(structProperty["pulangdata"])
+        # structProperty["detaildata"]=getAndJoinStokById(structProperty["detaildata"])
+        # structProperty["pulangdata"]=getAndJoinStokById(structProperty["pulangdata"])
         structProperty["detaildata"]=getAndJoinKopiById(structProperty["detaildata"])
         structProperty["pulangdata"]=getAndJoinKopiById(structProperty["pulangdata"])
         # structProperty["detaildata"]=getAndJoinTokoById(structProperty["detaildata"])
         structProperty["pulangdata"]=getAndJoinTokoById(structProperty["pulangdata"])
+        print(structProperty["pulangdata"].dtypes)
         rows_tableDetail,icon_rowDetail=listToTableV2(structProperty["detaildata"],True,False,0)
         rows_tablePulang,icon_rowPulang=listToTableV2(structProperty["pulangdata"],True,True,1)
         detailNotaContainer.clear()
