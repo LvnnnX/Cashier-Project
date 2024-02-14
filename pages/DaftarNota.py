@@ -376,6 +376,9 @@ def main(view:View,super_page:Page):
                 "alamat":tokoDetail["alamat"],
             }
         else:
+            structProperty["changes"]["addDetailPulang"].append((
+                
+            ))
             structProperty["detailnew"].loc[len(structProperty["detailnew"])]={
                 "id_toko":data["namaToko"][0],
                 "id_kopi":data["namaBarang"][0],
@@ -811,6 +814,7 @@ def main(view:View,super_page:Page):
         structProperty["detailnew"]=loadNotaDetailAmbilbyIdNota(data["id_nota"],datetime.datetime.now()).reset_index()
         # structProperty["detailnew"]=getAndJoinStokById(structProperty["detailnew"])
         structProperty["detailnew"]=getAndJoinKopiById(structProperty["detailnew"])
+        print(structProperty["detailnew"])
         #alertDialogEditingCellCard editing action ya mengisi nama_toko,id_toko bakalan 
         structProperty["detailnew"]=structProperty["detailnew"].loc[structProperty["detailnew"]["id_nota"]==data["id_nota"]]
         structProperty["detailnew"]["nama_toko"]=""
@@ -849,7 +853,6 @@ def main(view:View,super_page:Page):
         structProperty["pulangdata"]=getAndJoinKopiById(structProperty["pulangdata"])
         # structProperty["detaildata"]=getAndJoinTokoById(structProperty["detaildata"])
         structProperty["pulangdata"]=getAndJoinTokoById(structProperty["pulangdata"])
-        print(structProperty["pulangdata"].dtypes)
         rows_tableDetail,icon_rowDetail=listToTableV2(structProperty["detaildata"],True,False,0)
         rows_tablePulang,icon_rowPulang=listToTableV2(structProperty["pulangdata"],True,True,1)
         detailNotaContainer.clear()

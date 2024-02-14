@@ -166,6 +166,7 @@ def removeAndAddAmbil(listOfQuery,date:datetime.datetime):
     Month=HASHMONTH[int(date.strftime("%m"))-1]
     Day=date.strftime("%d")
     ambilCsv=pd.read_csv(DATAPATH / "Coffee" / Year / Month / "ambil.csv")
+    ambilCsv["id_ambil"]=ambilCsv["id_ambil"].astype(str)
     changeCsv=ambilCsv
     for singleQuery in listOfQuery:
         changeCsv=changeCsv.loc[changeCsv["id_ambil"]!=singleQuery[0][0]]
@@ -274,6 +275,8 @@ def updateStokAvailableByIdMultiple(listOfQuery):
     for i in listOfQuery:
         monthPath.add(i[2])
     dictionaryCsv={}
+    print("runned")
+    print(listOfQuery)
     for i in monthPath:
         dictionaryCsv[i]=pd.read_csv(DATAPATH / "Coffee" / i / "stok.csv").set_index("id_stok")
     for query in listOfQuery:
