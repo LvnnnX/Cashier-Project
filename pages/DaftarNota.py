@@ -791,6 +791,7 @@ def main(view:View,super_page:Page):
         structProperty["changes"]["changeHeaderStatus"].append((data["id_nota"],1))
         saveChanges()
         clearStuctProperty()
+        #reload the data
         structProperty["headerData"]=loadNotaHeaderByTime(None,datetime.datetime.now())
         structProperty["headerData"]=getAndJoinSalesById(structProperty["headerData"])
         daftarNotaListToContainer(structProperty["headerData"])
@@ -808,13 +809,13 @@ def main(view:View,super_page:Page):
         card.open=True
         super_page.update()
     def createNotaBerlangsungPulang(e,data):
+        formatTanggal="%d/%m/%Y %H:%M"
         disableNotaButton([0,1])
         #bersihin log query buat nanti nyimpen perubahannya
         clearStuctProperty()
-        structProperty["detailnew"]=loadNotaDetailAmbilbyIdNota(data["id_nota"],datetime.datetime.now()).reset_index()
+        structProperty["detailnew"]=loadNotaDetailAmbilbyIdNota(data["id_nota"],datetime.datetime.strptime(data["tanggal"],formatTanggal)).reset_index(drop=True)
         # structProperty["detailnew"]=getAndJoinStokById(structProperty["detailnew"])
         structProperty["detailnew"]=getAndJoinKopiById(structProperty["detailnew"])
-        print(structProperty["detailnew"])
         #alertDialogEditingCellCard editing action ya mengisi nama_toko,id_toko bakalan 
         structProperty["detailnew"]=structProperty["detailnew"].loc[structProperty["detailnew"]["id_nota"]==data["id_nota"]]
         structProperty["detailnew"]["nama_toko"]=""
@@ -832,7 +833,7 @@ def main(view:View,super_page:Page):
         super_page.update()
     def dataToDetailNotaBerlangsung(data):
         enableNotaButton([0,1])
-        structProperty["detaildata"]=loadNotaDetailAmbilbyIdNota(data["id_nota"],datetime.datetime.now()).reset_index()
+        structProperty["detaildata"]=loadNotaDetailAmbilbyIdNota(data["id_nota"],datetime.datetime.now()).reset_index(drop=True)
         # structProperty["detaildata"]=getAndJoinStokById(structProperty["detaildata"])
         structProperty["detaildata"]=getAndJoinKopiById(structProperty["detaildata"])
         # structProperty["detaildata"]=getAndJoinTokoById(structProperty["detaildata"])
@@ -843,10 +844,11 @@ def main(view:View,super_page:Page):
         detailNotaButton[1].on_click=lambda e : createNotaBerlangsungPulang(e,data)
         detailNotaButton[2].on_click=alertDialogDetailNotaBerlangsungHapus
     def dataToDetailNotaSelesai(data):
+        formatTanggal="%d/%m/%Y %H:%M"
         dataselesaiambil=structProperty["headerData"].loc[(structProperty["headerData"]["id_nota"]==data["id_nota"]) & (structProperty["headerData"]["jenis_transaksi"]==0) ]
         dataselesaipulang=structProperty["headerData"].loc[(structProperty["headerData"]["id_nota"]==data["id_nota"]) & (structProperty["headerData"]["jenis_transaksi"]==1) ]
-        structProperty["detaildata"]=loadNotaDetailAmbilbyIdNota(dataselesaiambil.iloc[0]["id_nota"],datetime.datetime.now()).reset_index()
-        structProperty["pulangdata"]=loadNotaDetailPulangbyIdNota(dataselesaipulang.iloc[0]["id_nota"],datetime.datetime.now()).reset_index()
+        structProperty["detaildata"]=loadNotaDetailAmbilbyIdNota(dataselesaiambil.iloc[0]["id_nota"],datetime.datetime.strptime(dataselesaiambil.iloc[0]["tanggal"],formatTanggal)).reset_index(drop=True)
+        structProperty["pulangdata"]=loadNotaDetailPulangbyIdNota(dataselesaipulang.iloc[0]["id_nota"],datetime.datetime.strptime(dataselesaipulang.iloc[0]["tanggal"],formatTanggal)).reset_index(drop=True)
         # structProperty["detaildata"]=getAndJoinStokById(structProperty["detaildata"])
         # structProperty["pulangdata"]=getAndJoinStokById(structProperty["pulangdata"])
         structProperty["detaildata"]=getAndJoinKopiById(structProperty["detaildata"])
