@@ -17,3 +17,4 @@ BASEDIR = Path(__file__).parent.parent
 JSONPATH = BASEDIR / 'json'
 DATAPATH = BASEDIR / 'data'
 IMGPATH = DATAPATH / 'img'
+

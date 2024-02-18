@@ -20,7 +20,7 @@ def main(view:View,super_page:Page):
         "deleteAmbil":[],
         "deletePulang":[],
         "addNotaHeader":[],
-        "changeHeaderStatus":[],
+        "updateHeaderData":[],
         "addDetailPulang":[],
         "addAmbilPulang":[]
     }
@@ -32,19 +32,19 @@ def main(view:View,super_page:Page):
         structProperty["changes"]["deleteAmbil"].clear()
         structProperty["changes"]["deletePulang"].clear()
         structProperty["changes"]["addNotaHeader"].clear()
-        structProperty["changes"]["changeHeaderStatus"].clear()
+        structProperty["changes"]["updateHeaderData"].clear()
         structProperty["changes"]["addDetailPulang"].clear()
         structProperty["changes"]["addAmbilPulang"].clear()
     def saveChanges():
         date=datetime.datetime.now()
-        addNotaHeader(structProperty["changes"]["addNotaHeader"],date)
+        addNotaHeader(structProperty["changes"]["addNotaHeader"])
         addNotaDetailPulang(structProperty["changes"]["addDetailPulang"],date)
         updateStokAvailableByIdMultiple(structProperty["changes"]["changeStokAvailable"])
-        updateNotaHeaderStatusById(structProperty["changes"]["changeHeaderStatus"],date)
-        updateDetailNotaPulangIdStok(structProperty["changes"]["changeDetailPulang"],date)
+        updateNotaHeaderStatusAndTanggalPairByIdAndDate(structProperty["changes"]["updateHeaderData"])
+        updateDetailNotaPulangIdStok(structProperty["changes"]["changeDetailPulang"])
         removeAndAddAmbil(structProperty["changes"]["addAmbilPulang"],date)
         
-    structProperty["headerData"]=loadNotaHeaderByTime(None,datetime.datetime.now())
+    structProperty["headerData"]=loadNotaHeaderByTime(datetime.datetime.now(),62)
     structProperty["headerData"]=getAndJoinSalesById(structProperty["headerData"])
     listNamaSales=getSeriesIdAndNamaSales()
     listNamaBarang=getSeriesIdAndNamaKopi()
@@ -257,14 +257,14 @@ def main(view:View,super_page:Page):
         super_page.update()
     daftar_nota_button[0].on_click=clicked_nota_berlangsung
     daftar_nota_button[1].on_click=clicked_nota_NotaSelesai
-    def listToTableV2(DataFrame,icon_flag,pulang,jenis_transaksi):
+    def listToTableV2(DataFrame,icon_flag,pulang,jenis_transaksi,tanggal):
         tempDataFrame=[]
         icon_row=[]
         rowWidth=super_page.window_width/100*40/100*16
         harga=0
         hargaCells=DataCell(Text("",width=rowWidth))
         for index,row in DataFrame.iterrows():
-            temp = alertDialogEditingCellCard(row,index,DataFrame,jenis_transaksi)
+            temp = alertDialogEditingCellCard(row,index,DataFrame,jenis_transaksi,tanggal)
             temp.hargaCells=hargaCells
             temp.jenisNotaPulang=pulang
             icon_cells=[
@@ -402,7 +402,7 @@ def main(view:View,super_page:Page):
         super_page.dialog.open=False
         super_page.update()
     class alertDialogEditingCellCard():
-        def __init__(self,i,index,DataFrame,jenisTransaksi):
+        def __init__(self,i,index,DataFrame,jenisTransaksi,tanggal):
             self.i=i
             self.index=index
             self.cells=None
@@ -410,6 +410,7 @@ def main(view:View,super_page:Page):
             self.jenisNotaPulang=None
             self.dataFrame=DataFrame
             self.jenisTransaksi=jenisTransaksi
+            self.tanggal=tanggal
         def alert(self,e):
             self.hargaPerRenceng=TextField()
             self.jumlahLaku=TextField()
@@ -471,6 +472,7 @@ def main(view:View,super_page:Page):
             alertYaorBatalkan[1].on_click=self.editDataActionYesRow
             super_page.update()
         def editDataActionYesRow(self,e):
+            formatTanggal="%d/%m/%Y %H:%M"
             barang=dropdownNamaBarang.value.split(" - ")
             toko=dropdownNamaToko.value.split(" - ")
             harga_satuan=self.hargaPerRenceng.value
@@ -522,7 +524,8 @@ def main(view:View,super_page:Page):
                 self.dataFrame["id_toko"][self.index]=toko[0]
                 self.cells[4].content.value=toko[1]
             if not super_page.flagDaftarNota:
-                structProperty["changes"]["changeDetailPulang"].append((self.i["id_nota_detail"],int(self.i["id_ambil"]),int(harga_satuan),self.dataFrame["id_toko"][self.index],barang[0]))
+                print("runned")
+                structProperty["changes"]["changeDetailPulang"].append((self.i["id_nota_detail"],str(self.i["id_ambil"]),int(harga_satuan),self.dataFrame["id_toko"][self.index],barang[0],datetime.datetime.strptime(self.tanggal,formatTanggal),int(stok)))
             self.dataFrame["total"]=harga
             self.hargaCells.content.value="Rp.{}".format(harga)
             structProperty["changes"]["addAmbilPulang"].append(listOfAmbilTable)
@@ -634,11 +637,11 @@ def main(view:View,super_page:Page):
                 DataColumn(Text("Toko",size=12,width=super_page.window_width/100*40/100*15,color=COLOUR_JSON["Gray/400"])),
                 DataColumn(Text("Aksi",size=12,width=super_page.window_width/100*40/100*16,color=COLOUR_JSON["Gray/400"])),
             ]
-            if super_page.flagDaftarNota:
-                buttonTambahBarangNotaPulang.on_click=lambda e : alertDialogTambahRowNotaPulang(e,tableRow)
-                rowDesc.append(
-                    buttonTambahBarangNotaPulang
-                )
+            # if super_page.flagDaftarNota:
+            buttonTambahBarangNotaPulang.on_click=lambda e : alertDialogTambahRowNotaPulang(e,tableRow)
+            rowDesc.append(
+                buttonTambahBarangNotaPulang
+            )
         else:
             rowDesc=[
                 Text(
@@ -757,6 +760,7 @@ def main(view:View,super_page:Page):
         super_page.dialog.open=False
         super_page.update()
     def notaPulangSelesaiHapusNotaPopUpButtonActionYa(e):
+        structProperty["pulangdata"]
         detailNotaContainer.clear()
         detailNotaContainer.append(NONEDATA)
         super_page.dialog.open=False
@@ -784,15 +788,16 @@ def main(view:View,super_page:Page):
         alertYaorBatalkan[1].on_click=detailNotaBerlangsungHapusPopUpButtonActionYa
         super_page.update()
     def alertDialogNotaPulangSimpanActionYa(e,data):
+        formatTanggal="%d/%m/%Y %H:%M"
         for index,row in structProperty["detailnew"].iterrows():
             structProperty["changes"]["addDetailPulang"].append((row["id_nota_detail"],row["id_nota"],row["id_ambil"],row["qty"],row["disc"],row["harga_satuan"],row["id_toko"],row["id_kopi"],row["id_kopi"]))
         #inget rubah id sales kalok udah ada system auth nya
-        structProperty["changes"]["addNotaHeader"].append((data["id_nota"],data["total"],data["status_nota"],data["id_karyawan"],1,data["namapelangan"],data["id_sales"],datetime.datetime.now()))
-        structProperty["changes"]["changeHeaderStatus"].append((data["id_nota"],1))
+        structProperty["changes"]["addNotaHeader"].append((data["id_nota"],data["total"],1,data["id_karyawan"],1,data["namapelangan"],data["id_sales"],datetime.datetime.now(),datetime.datetime.strptime(data["tanggal"],formatTanggal)))
+        structProperty["changes"]["updateHeaderData"].append((data["id_nota"],1,datetime.datetime.strptime(data["tanggal"],formatTanggal),datetime.datetime.now(),0))
         saveChanges()
         clearStuctProperty()
         #reload the data
-        structProperty["headerData"]=loadNotaHeaderByTime(None,datetime.datetime.now())
+        structProperty["headerData"]=loadNotaHeaderByTime(datetime.datetime.now(),1)
         structProperty["headerData"]=getAndJoinSalesById(structProperty["headerData"])
         daftarNotaListToContainer(structProperty["headerData"])
         selesaikanNotaPulang(e)
@@ -822,8 +827,10 @@ def main(view:View,super_page:Page):
         structProperty["detailnew"]["id_toko"]=""
         columnOfid=createListofUUID(len(structProperty["detailnew"]))
         structProperty["detailnew"]["id_nota_detail"]=columnOfid
+        structProperty["detaildata"]["tanggal_pair"]=datetime.datetime.strftime(datetime.datetime.now(),formatTanggal)
+        structProperty["detailnew"]["tanggal"]=datetime.datetime.strftime(datetime.datetime.now(),formatTanggal)
         # structProperty["detailnew"]=getAndJoinTokoById(structProperty["detailnew"])
-        notaPulangRow,icon_row=listToTableV2(structProperty["detailnew"],False,True,data["jenis_transaksi"])
+        notaPulangRow,icon_row=listToTableV2(structProperty["detailnew"],False,True,data["jenis_transaksi"],data["tanggal"])
         for i in icon_row:
             i[0].visible=False
         NotaPulang,cardBottom=createNotaTableCard("Nota Pulang",data,notaPulangButton,notaPulangRow,True)
@@ -832,12 +839,13 @@ def main(view:View,super_page:Page):
         notaPulangButton[1].on_click=batalkanNotaPulang
         super_page.update()
     def dataToDetailNotaBerlangsung(data):
+        formatTanggal="%d/%m/%Y %H:%M"
         enableNotaButton([0,1])
-        structProperty["detaildata"]=loadNotaDetailAmbilbyIdNota(data["id_nota"],datetime.datetime.now()).reset_index(drop=True)
+        structProperty["detaildata"]=loadNotaDetailAmbilbyIdNota(data["id_nota"],datetime.datetime.strptime(data["tanggal"],formatTanggal)).reset_index(drop=True)
         # structProperty["detaildata"]=getAndJoinStokById(structProperty["detaildata"])
         structProperty["detaildata"]=getAndJoinKopiById(structProperty["detaildata"])
         # structProperty["detaildata"]=getAndJoinTokoById(structProperty["detaildata"])
-        rows_table,icon_row=listToTableV2(structProperty["detaildata"].loc[structProperty["detaildata"]["id_nota"]==data["id_nota"]],True,False,data["jenis_transaksi"])
+        rows_table,icon_row=listToTableV2(structProperty["detaildata"].loc[structProperty["detaildata"]["id_nota"]==data["id_nota"]],True,False,data["jenis_transaksi"],data["tanggal"])
         detailNotaContainer.clear()
         DetailNota,cardBottom=createNotaTableCard("DetailNota",data,detailNotaButton,rows_table,False)
         detailNotaContainer.append(DetailNota)
@@ -845,8 +853,9 @@ def main(view:View,super_page:Page):
         detailNotaButton[2].on_click=alertDialogDetailNotaBerlangsungHapus
     def dataToDetailNotaSelesai(data):
         formatTanggal="%d/%m/%Y %H:%M"
-        dataselesaiambil=structProperty["headerData"].loc[(structProperty["headerData"]["id_nota"]==data["id_nota"]) & (structProperty["headerData"]["jenis_transaksi"]==0) ]
         dataselesaipulang=structProperty["headerData"].loc[(structProperty["headerData"]["id_nota"]==data["id_nota"]) & (structProperty["headerData"]["jenis_transaksi"]==1) ]
+        dataDetailAmbilHeader=loadNotaHeaderByTime(date=datetime.datetime.strptime(dataselesaipulang.iloc[0]["tanggal_pair"],formatTanggal),daysBehind=1)
+        dataselesaiambil=dataDetailAmbilHeader.loc[(dataDetailAmbilHeader["id_nota"]==data["id_nota"]) & (dataDetailAmbilHeader["jenis_transaksi"]==0) ]
         structProperty["detaildata"]=loadNotaDetailAmbilbyIdNota(dataselesaiambil.iloc[0]["id_nota"],datetime.datetime.strptime(dataselesaiambil.iloc[0]["tanggal"],formatTanggal)).reset_index(drop=True)
         structProperty["pulangdata"]=loadNotaDetailPulangbyIdNota(dataselesaipulang.iloc[0]["id_nota"],datetime.datetime.strptime(dataselesaipulang.iloc[0]["tanggal"],formatTanggal)).reset_index(drop=True)
         # structProperty["detaildata"]=getAndJoinStokById(structProperty["detaildata"])
@@ -855,8 +864,8 @@ def main(view:View,super_page:Page):
         structProperty["pulangdata"]=getAndJoinKopiById(structProperty["pulangdata"])
         # structProperty["detaildata"]=getAndJoinTokoById(structProperty["detaildata"])
         structProperty["pulangdata"]=getAndJoinTokoById(structProperty["pulangdata"])
-        rows_tableDetail,icon_rowDetail=listToTableV2(structProperty["detaildata"],True,False,0)
-        rows_tablePulang,icon_rowPulang=listToTableV2(structProperty["pulangdata"],True,True,1)
+        rows_tableDetail,icon_rowDetail=listToTableV2(structProperty["detaildata"],True,False,0,dataselesaiambil.iloc[0]["tanggal"])
+        rows_tablePulang,icon_rowPulang=listToTableV2(structProperty["pulangdata"],False,True,1,dataselesaipulang.iloc[0]["tanggal"])
         detailNotaContainer.clear()
         DetailNota,cardBottomDetail=createNotaTableCard("DetailNota",data,[],rows_tableDetail,False)
         detailNotaContainer.append(DetailNota)
@@ -913,7 +922,7 @@ def main(view:View,super_page:Page):
                     )
                 )
             )
-        for index,row in data.loc[(data["status_nota"]==1) & (data["jenis_transaksi"]==0)].iterrows():
+        for index,row in data.loc[(data["status_nota"]==1) & (data["jenis_transaksi"]==1)].iterrows():
             buttonAction=daftarNotaListAction(row)
             daftarNotaList["selesai"].append(
                 Container(

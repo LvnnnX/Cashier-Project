@@ -1,18 +1,49 @@
 from utils.libs import *
 from utils.converter import *
+
 def load_colors(Path=JSONPATH) -> dict:
     f = open(f"{Path}/bgcolors.json")
     colors = json.load(f)
     return colors
 
-def loadNotaHeaderByTime(filter:str,date:datetime.datetime,Path=DATAPATH):
-    Year=date.strftime("%Y")
-    Month=HASHMONTH[int(date.strftime("%m"))-1]
-    Day=date.strftime("%d")
+#very computationaly heavy
+def loadNotaHeaderByTime(date:datetime.datetime,daysBehind,Path=DATAPATH):
+    timeStart=date+relativedelta(days=-daysBehind)
+    Year=timeStart.strftime("%Y")
+    Month=HASHMONTH[int(timeStart.strftime("%m"))-1]
+    Day=timeStart.strftime("%d")
+    monthDifference=date.month-timeStart.month+(date.year-timeStart.year)*12
     if not os.path.exists(DATAPATH / "Nota" / Year / Month / "nota_header.csv"):
-        print("nota_header path don't exist")
-    detail=pd.read_csv(DATAPATH / "Nota" / Year / Month / "nota_header.csv")
-    return detail
+        while (0<monthDifference) and (not os.path.exists(DATAPATH / "Nota" / Year / Month / "nota_header.csv")):
+            Year=timeStart.strftime("%Y")
+            Month=HASHMONTH[int(timeStart.strftime("%m"))-1]
+            timeStart=timeStart+relativedelta(months=1)
+            monthDifference-=1
+        Year=timeStart.strftime("%Y")
+        Month=HASHMONTH[int(timeStart.strftime("%m"))-1]
+        if not os.path.exists(DATAPATH / "Nota" / Year / Month / "nota_header.csv"):
+            print("nota_header path don't exist")
+            return None
+        mainDF=pd.read_csv(DATAPATH / "Nota" / Year / Month / "nota_header.csv")
+    else:
+        mainDF=pd.read_csv(DATAPATH / "Nota" / Year / Month / "nota_header.csv")
+        timestamp=[]
+        for i in mainDF["tanggal"]:
+            timestamp.append(datetime.datetime.strptime(i,"%d/%m/%Y %H:%M").timestamp())
+        timestamp=pd.Series(timestamp)
+        mainDF=mainDF.loc[timestamp>=timeStart.timestamp()]
+    for i in range(1,monthDifference+1):
+        timeitter=timeStart+relativedelta(months=i)
+        Year=timeitter.strftime("%Y")
+        Month=HASHMONTH[int(timeitter.strftime("%m"))-1]
+        Day=timeitter.strftime("%d")
+        if not os.path.exists(DATAPATH / "Nota" / Year / Month / "nota_header.csv"):
+            print("nota_header path don't exist")
+        else:
+            detail=pd.read_csv(DATAPATH / "Nota" / Year / Month / "nota_header.csv")
+            mainDF=pd.concat([mainDF,detail])
+    return mainDF
+
     
 def loadNotaDetailAmbilbyIdNota(NotaPrimaryId,date:datetime.datetime,path=DATAPATH):
     Year=date.strftime("%Y")
@@ -83,7 +114,7 @@ def getAndJoinStokById(dataFrame:pd.DataFrame):
 def getPossibleStokResolver(idKopi,jumlahPesanan,listOfQuery:list):
     listOfQueryCopy=listOfQuery.copy()
     timeNow=datetime.datetime.now()
-    monthStart=datetime.datetime(2024,2,1)
+    monthStart=datetime.datetime(2024,1,1)
     diference=relativedelta(timeNow,monthStart).months
     length_month=min(18,diference)
     monthIterate=timeNow+relativedelta(months=-length_month)
@@ -112,6 +143,7 @@ def getPossibleStokResolver(idKopi,jumlahPesanan,listOfQuery:list):
     if len(pastStok.loc[pastStok["stok_cum"]>=jumlahPesanan])>0:
         minValue=pastStok.loc[pastStok["stok_cum"]>=jumlahPesanan,"stok_cum"].min()
         returnedRows=pastStok.loc[pastStok["stok_cum"]<=minValue].drop(["stok_cum"],axis=1)
+        pastStok.sort_values("tanggal_exp",inplace=True)
         queryOfChange=[]
         for index,row in returnedRows.iterrows():
             if jumlahPesanan-row["stok"]>0:
@@ -147,6 +179,7 @@ def getPossibleStokResolver(idKopi,jumlahPesanan,listOfQuery:list):
         if len(pastStok.loc[pastStok["stok_cum"]>=jumlahPesanan])>0:
             returnedRows=pastStok.loc[pastStok["stok_cum"]>=jumlahPesanan].drop(["stok_cum"],axis=1)
             queryOfChange=[]
+            pastStok.sort_values("tanggal_exp",inplace=True)
             for index,row in returnedRows.iterrows():
                 if jumlahPesanan-row["stok"]>0:
                     jumlahPesanan=jumlahPesanan-row["stok"]
@@ -242,16 +275,17 @@ def get_screen_size():
     monitor = get_monitors()[0]
     return monitor.width, monitor.height
 
-#(id_nota,status)
-def updateNotaHeaderStatusById(listOfQuery,date:datetime.datetime):
-    Year=date.strftime("%Y")
-    Month=HASHMONTH[int(date.strftime("%m"))-1]
-    Day=date.strftime("%d")
-    headerCsv=pd.read_csv(DATAPATH / "Nota" / Year / Month / "nota_header.csv")
+#(id_nota,status,tanggal,tanggal_pair,jenis_transaksi)
+def updateNotaHeaderStatusAndTanggalPairByIdAndDate(listOfQuery):
     for i in listOfQuery:
+        print(i)
+        Year=i[2].strftime("%Y")
+        Month=HASHMONTH[int(i[2].strftime("%m"))-1]
+        Day=i[2].strftime("%d")
+        headerCsv=pd.read_csv(DATAPATH / "Nota" / Year / Month / "nota_header.csv")
         headerCsv.loc[headerCsv["id_nota"]==i[0],"status_nota"]=i[1]
-    headerCsv.reset_index(drop=True,inplace=True)
-    headerCsv.to_csv(DATAPATH / "Nota" / Year / Month / "nota_header.csv",index=False)
+        headerCsv.loc[(headerCsv["id_nota"]==i[0]) & (headerCsv["jenis_transaksi"]==i[4]),"tanggal_pair"]=i[3].strftime("%d/%m/%Y %H:%M")
+        headerCsv.to_csv(DATAPATH / "Nota" / Year / Month / "nota_header.csv",index=False)
 
 
 #(id_nota_detail,stok,harga_satuan) listQueryInput
@@ -306,12 +340,12 @@ def addNotaDetailPulang(listOfQuery,date:datetime.datetime):
     PulangCsv.to_csv(DATAPATH / "Nota" / Year / Month / "nota_detail_pulang.csv",index=False)
 
 #id_nota,total,status_nota,id_karyawan,jenis_transaksi,namapelanngan,id_sales,tanggal
-def addNotaHeader(listQuery,date:datetime.datetime):
-    Year=date.strftime("%Y")
-    Month=HASHMONTH[int(date.strftime("%m"))-1]
-    Day=date.strftime("%d")
-    headerCsv=pd.read_csv(DATAPATH / "Nota" / Year / Month / "nota_header.csv")
+def addNotaHeader(listQuery):
     for i in listQuery:
+        Year=i[7].strftime("%Y")
+        Month=HASHMONTH[int(i[7].strftime("%m"))-1]
+        Day=i[7].strftime("%d")
+        headerCsv=pd.read_csv(DATAPATH / "Nota" / Year / Month / "nota_header.csv")
         row={
             "id_nota":i[0],
             "total":i[1],
@@ -320,25 +354,27 @@ def addNotaHeader(listQuery,date:datetime.datetime):
             "jenis_transaksi":i[4],
             "namapelangan":i[5],
             "id_sales":i[6],
-            "tanggal":i[7].strftime("%d/%m/%Y %H:%M")
+            "tanggal":i[7].strftime("%d/%m/%Y %H:%M"),
+            "tanggal_pair":i[8].strftime("%d/%m/%Y %H:%M")
         }
         headerCsv.loc[len(headerCsv)]=row
-    headerCsv.reset_index(drop=True,inplace=True)
-    headerCsv.to_csv(DATAPATH / "Nota" / Year / Month / "nota_header.csv",index=False)
+        headerCsv.reset_index(drop=True,inplace=True)
+        headerCsv.to_csv(DATAPATH / "Nota" / Year / Month / "nota_header.csv",index=False)
 
-
-def updateDetailNotaPulangIdStok(listOfQuery,date:datetime.datetime):
-    Year=date.strftime("%Y")
-    Month=HASHMONTH[int(date.strftime("%m"))-1]
-    Day=date.strftime("%d")
-    pulangCsv=pd.read_csv(DATAPATH / "Nota" / Year / Month / "nota_detail_pulang.csv")
+#listofQuery(id_nota_detail,id_ambil,harga_satuan,id_toko,id_kopi,tanggal,stok)
+def updateDetailNotaPulangIdStok(listOfQuery):
     for i in listOfQuery:
-        temp=pulangCsv.loc[pulangCsv["id_nota_detail"]==i[0]]
-        temp["id_stok"]=i[1]
-        temp["harga_satuan"]=i[2]
-        temp["id_toko"]=i[3]
-        pulangCsv.loc[pulangCsv["id_nota_detail"]==i[0]]=temp
-    pulangCsv.to_csv(DATAPATH / "Nota" / Year / Month / "nota_detail_pulang.csv",index=False)
+        Year=i[5].strftime("%Y")
+        Month=HASHMONTH[int(i[5].strftime("%m"))-1]
+        Day=i[5].strftime("%d")
+        pulangCsv=pd.read_csv(DATAPATH / "Nota" / Year / Month / "nota_detail_pulang.csv")
+        pulangCsv["id_ambil"]=pulangCsv["id_ambil"].astype(str)
+        pulangCsv.loc[pulangCsv["id_nota_detail"]==str(i[0]),"id_ambil"]=i[1]
+        pulangCsv.loc[pulangCsv["id_nota_detail"]==str(i[0]),"harga_satuan"]=i[2]
+        pulangCsv.loc[pulangCsv["id_nota_detail"]==str(i[0]),"id_toko"]=i[3]
+        pulangCsv.loc[pulangCsv["id_nota_detail"]==str(i[0]),"id_kopi"]=i[4]
+        pulangCsv.loc[pulangCsv["id_nota_detail"]==str(i[0]),"qty"]=i[6]
+        pulangCsv.to_csv(DATAPATH / "Nota" / Year / Month / "nota_detail_pulang.csv",index=False)
 
 def getLatestStokIdByKopiId(IdKopi):
     stokCsv=pd.read_csv(DATAPATH / "Coffee" / "stok.csv")
@@ -354,3 +390,7 @@ def datetimeToHashYearMonth(date:datetime.datetime):
     year=date.strftime('%Y')
     hashedMonth=HASHMONTH[int(month)-1]
     return os.path.join(year,hashedMonth)
+
+
+# #(id_nota,)
+# def deleteNotaPulangDetailById(listOfQuery):
