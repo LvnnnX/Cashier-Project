@@ -122,7 +122,7 @@ def getPossibleStokResolver(idKopi,jumlahPesanan,listOfQuery:list):
     Month=HASHMONTH[int(monthIterate.strftime("%m"))-1]
     bulan=monthIterate
     pastStok=pd.read_csv(DATAPATH / "Coffee" / Year / Month / "stok.csv")
-    pastStok=pastStok.loc[pastStok["id_kopi"]==idKopi]  
+    pastStok=pastStok.loc[pastStok["id_kopi"].astype(str)==str(idKopi)]  
     #berat banget di komputasi mungkin perlu di adjust
     #karena aku pengen buat kode nya ku run pas selesai jadi aku perlu nge redo perubahan yang terjadi sebelum kodenya jalan
     #listOfQuery itu query perubahaan yang terjadi sebelumnya
@@ -189,7 +189,7 @@ def getPossibleStokResolver(idKopi,jumlahPesanan,listOfQuery:list):
                     rowStok=jumlahPesanan
                     queryOfChange.append((row["id_stok"],row["tanggal"],rowStok))
                     return queryOfChange
-    return None
+    return []
     
 
 
@@ -278,7 +278,6 @@ def get_screen_size():
 #(id_nota,status,tanggal,tanggal_pair,jenis_transaksi)
 def updateNotaHeaderStatusAndTanggalPairByIdAndDate(listOfQuery):
     for i in listOfQuery:
-        print(i)
         Year=i[2].strftime("%Y")
         Month=HASHMONTH[int(i[2].strftime("%m"))-1]
         Day=i[2].strftime("%d")
@@ -369,11 +368,11 @@ def updateDetailNotaPulangIdStok(listOfQuery):
         Day=i[5].strftime("%d")
         pulangCsv=pd.read_csv(DATAPATH / "Nota" / Year / Month / "nota_detail_pulang.csv")
         pulangCsv["id_ambil"]=pulangCsv["id_ambil"].astype(str)
-        pulangCsv.loc[pulangCsv["id_nota_detail"]==str(i[0]),"id_ambil"]=i[1]
-        pulangCsv.loc[pulangCsv["id_nota_detail"]==str(i[0]),"harga_satuan"]=i[2]
-        pulangCsv.loc[pulangCsv["id_nota_detail"]==str(i[0]),"id_toko"]=i[3]
-        pulangCsv.loc[pulangCsv["id_nota_detail"]==str(i[0]),"id_kopi"]=i[4]
-        pulangCsv.loc[pulangCsv["id_nota_detail"]==str(i[0]),"qty"]=i[6]
+        pulangCsv.loc[pulangCsv["id_nota_detail"]==str(i[0]),"id_ambil"]=str(i[1])
+        pulangCsv.loc[pulangCsv["id_nota_detail"]==str(i[0]),"harga_satuan"]=str(i[2])
+        pulangCsv.loc[pulangCsv["id_nota_detail"]==str(i[0]),"id_toko"]=str(i[3])
+        pulangCsv.loc[pulangCsv["id_nota_detail"]==str(i[0]),"id_kopi"]=str(i[4])
+        pulangCsv.loc[pulangCsv["id_nota_detail"]==str(i[0]),"qty"]=str(i[6])
         pulangCsv.to_csv(DATAPATH / "Nota" / Year / Month / "nota_detail_pulang.csv",index=False)
 
 def getLatestStokIdByKopiId(IdKopi):
@@ -392,5 +391,26 @@ def datetimeToHashYearMonth(date:datetime.datetime):
     return os.path.join(year,hashedMonth)
 
 
-# #(id_nota,)
-# def deleteNotaPulangDetailById(listOfQuery):
+# #(id_nota,tanggal)
+def deleteNotaPulangDetailById(listOfQuery):
+    for i in listOfQuery:
+        Year=i[5].strftime("%Y")
+        Month=HASHMONTH[int(i[5].strftime("%m"))-1]
+        Day=i[5].strftime("%d")
+        pulangCsv=pd.read_csv(DATAPATH / "Nota" / Year / Month / "nota_detail_pulang.csv")
+        pulangCsv["id_ambil"]=pulangCsv["id_ambil"].astype(str)
+        pulangCsv=pulangCsv.iloc[pulangCsv["id_nota"]!=i[0]]
+        pulangCsv.to_csv(DATAPATH / "Nota" / Year / Month / "nota_detail_pulang.csv",index=False)
+
+# #(id_nota,tanggal)
+def deleteNotaAmbilDetailById(listOfQuery):
+    for i in listOfQuery:
+        Year=i[5].strftime("%Y")
+        Month=HASHMONTH[int(i[5].strftime("%m"))-1]
+        Day=i[5].strftime("%d")
+        ambilCsv=pd.read_csv(DATAPATH / "Nota" / Year / Month / "nota_detail_ambil.csv")
+        ambilCsv["id_ambil"]=ambilCsv["id_ambil"].astype(str)
+        ambilCsv=ambilCsv.iloc[ambilCsv["id_nota"]!=i[0]]
+        ambilCsv.to_csv(DATAPATH / "Nota" / Year / Month / "nota_detail_ambil.csv",index=False)
+
+#
