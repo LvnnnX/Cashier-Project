@@ -38,8 +38,9 @@ def main(view:View,super_page:Page):
         structProperty["changes"]["updateHeaderData"].clear()
         structProperty["changes"]["addDetailPulang"].clear()
         structProperty["changes"]["addAmbilPulang"].clear()
-        structProperty["changes"]["hapusNotaBerlangsung"].clear()
-        structProperty["changes"]["hapusNotaSelesai"].clear()
+        structProperty["changes"]["hapusNotaDanDetailBerlangsung"].clear()
+        structProperty["changes"]["hapusNotaDanDetailSelesai"].clear()
+        structProperty["changes"]["hapusDetailNota"].clear()
     def saveChanges():
         date=datetime.datetime.now()
         addNotaHeader(structProperty["changes"]["addNotaHeader"])
