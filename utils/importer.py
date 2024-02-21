@@ -96,8 +96,8 @@ def getAmbilById(idAmbil,date:datetime.datetime):
     Day=date.strftime("%d")
     ambilCsv=pd.read_csv(DATAPATH / "Coffee" / Year / Month / "ambil.csv")  
     ambil=ambilCsv.loc[ambilCsv["id_ambil"]==idAmbil]
-    stringStrip='%d/%m/%Y %H:%M'
-    ambil["tanggal_stok"]=ambil["tanggal_stok"].apply(lambda x : datetime.datetime.strptime(x,stringStrip))
+    # stringStrip='%d/%m/%Y %H:%M'
+    # ambil["tanggal_stok"]=ambil["tanggal_stok"].apply(lambda x : datetime.datetime.strptime(x,stringStrip))
     return ambil.reset_index()
 
 def getAndJoinStokById(dataFrame:pd.DataFrame):
@@ -213,7 +213,7 @@ def removeAndAddAmbil(listOfQuery,date:datetime.datetime):
     
 
 
-def getAndJoinKopiById(dataFrame:pd.DataFrame):
+def getAndJoinKopiById(dataFrame:pd.DataFrame)->pd.DataFrame:
     dataFrame["id_kopi"]=dataFrame["id_kopi"].astype(str)
     df=dataFrame.set_index("id_kopi")
     kopiCsv=pd.read_csv(DATAPATH / "Coffee" / "kopi.csv")
@@ -237,6 +237,17 @@ def getAndJoinTokoById(dataFrame:pd.DataFrame):
     tokoCsv.set_index("id_toko",inplace=True)
     toko=df.join(tokoCsv,how='inner',rsuffix="_toko")
     return toko.reset_index()
+
+def getAndJoinAmbilById(dataFrame:pd.DataFrame,date:datetime.datetime):
+    Year=date.strftime("%Y")
+    Month=HASHMONTH[int(date.strftime("%m"))-1]
+    Day=date.strftime("%d")
+    dataFrame["id_ambil"]=dataFrame["id_ambil"].astype(str)
+    ambilCsv=pd.read_csv(DATAPATH/ "Coffee" / Year / Month / "ambil.csv")
+    ambilCsv["id_ambil"]=ambilCsv["id_ambil"].astype(str)
+    ambil=pd.merge(ambilCsv,dataFrame,right_on="id_ambil",left_on="id_ambil",how='inner',suffixes=("_ambil","_detail"))
+    print(ambil)
+    return ambil.reset_index()
 
 
 def getIdTokoByName(nama:str):
@@ -392,25 +403,43 @@ def datetimeToHashYearMonth(date:datetime.datetime):
 
 
 # #(id_nota,tanggal)
-def deleteNotaPulangDetailById(listOfQuery):
+#yang perlu di delete row nota header nota, ambil
+def deleteNotaHeaderBelangsung(listOfQuery):
     for i in listOfQuery:
-        Year=i[5].strftime("%Y")
-        Month=HASHMONTH[int(i[5].strftime("%m"))-1]
-        Day=i[5].strftime("%d")
-        pulangCsv=pd.read_csv(DATAPATH / "Nota" / Year / Month / "nota_detail_pulang.csv")
-        pulangCsv["id_ambil"]=pulangCsv["id_ambil"].astype(str)
-        pulangCsv=pulangCsv.iloc[pulangCsv["id_nota"]!=i[0]]
-        pulangCsv.to_csv(DATAPATH / "Nota" / Year / Month / "nota_detail_pulang.csv",index=False)
+        Year=i[1].strftime("%Y")
+        Month=HASHMONTH[int(i[1].strftime("%m"))-1]
+        Day=i[1].strftime("%d")
+        #delete row di header
+        headerCsv=pd.read_csv(DATAPATH / "Nota" / Year / Month / "nota_header.csv")
+        print("the i",i)
+        print(headerCsv["id_nota"])
+        headerCsv=headerCsv.loc[headerCsv["id_nota"].astype(str)!=str(i[0])]
+        print(headerCsv["id_nota"])
+        headerCsv.to_csv(DATAPATH / "Nota" / Year / Month / "nota_header.csv",index=False)
+
 
 # #(id_nota,tanggal)
-def deleteNotaAmbilDetailById(listOfQuery):
+def deleteAmbilTableNotaById(listOfQuery):
     for i in listOfQuery:
-        Year=i[5].strftime("%Y")
-        Month=HASHMONTH[int(i[5].strftime("%m"))-1]
-        Day=i[5].strftime("%d")
-        ambilCsv=pd.read_csv(DATAPATH / "Nota" / Year / Month / "nota_detail_ambil.csv")
-        ambilCsv["id_ambil"]=ambilCsv["id_ambil"].astype(str)
-        ambilCsv=ambilCsv.iloc[ambilCsv["id_nota"]!=i[0]]
-        ambilCsv.to_csv(DATAPATH / "Nota" / Year / Month / "nota_detail_ambil.csv",index=False)
+        Year=i[1].strftime("%Y")
+        Month=HASHMONTH[int(i[1].strftime("%m"))-1]
+        Day=i[1].strftime("%d")
+        ambilCsv=pd.read_csv(DATAPATH / "Coffee" / Year / Month / "ambil.csv")
+        print("the i",i)
+        print(ambilCsv["id_ambil"])
+        ambilCsv=ambilCsv.loc[ambilCsv["id_ambil"].astype(str)!=str(i[0])]
+        print(ambilCsv["id_ambil"])
+        ambilCsv.to_csv(DATAPATH / "Coffee" / Year / Month / "ambil.csv",index=False)
 
-#
+def deleteNotaDetailAmbilBelangsung(listOfQuery):
+    for i in listOfQuery:
+        Year=i[1].strftime("%Y")
+        Month=HASHMONTH[int(i[1].strftime("%m"))-1]
+        Day=i[1].strftime("%d")
+        #delete row di header
+        headerCsv=pd.read_csv(DATAPATH / "Nota" / Year / Month / "nota_detail_ambil.csv")
+        headerCsv["id_nota"]=headerCsv["id_nota"].astype(str)
+        headerCsv=headerCsv.loc[headerCsv["id_nota"]!=str(i[0])]
+        headerCsv.to_csv(DATAPATH / "Nota" / Year / Month / "nota_detail_ambil.csv",index=False)
+
+

@@ -23,9 +23,12 @@ def main(view:View,super_page:Page):
         "updateHeaderData":[],
         "addDetailPulang":[],
         "addAmbilPulang":[],
-        "hapusNotaDanDetailBerlangsung":[],
-        "hapusNotaDanDetailSelesai":[],
-        "hapusDetailNota":[]
+        "hapusNotaHeaderBerlangsung":[],
+        "hapusNotaHeaderSelesai":[],
+        "hapusDetailNotaBerlangsung":[],
+        "hapusDetailNotaSelesai":[],
+        "hapusAmbilTableNotaBerlangsung":[],
+        "hapusAmbilTableNotaSelesai":[]
     }
     #buat fungsi untuk bersihin log nya
     def clearStuctProperty():
@@ -38,9 +41,12 @@ def main(view:View,super_page:Page):
         structProperty["changes"]["updateHeaderData"].clear()
         structProperty["changes"]["addDetailPulang"].clear()
         structProperty["changes"]["addAmbilPulang"].clear()
-        structProperty["changes"]["hapusNotaDanDetailBerlangsung"].clear()
-        structProperty["changes"]["hapusNotaDanDetailSelesai"].clear()
-        structProperty["changes"]["hapusDetailNota"].clear()
+        structProperty["changes"]["hapusNotaHeaderBerlangsung"].clear()
+        structProperty["changes"]["hapusNotaHeaderSelesai"].clear()
+        structProperty["changes"]["hapusDetailNotaBerlangsung"].clear()
+        structProperty["changes"]["hapusDetailNotaSelesai"].clear()
+        structProperty["changes"]["hapusAmbilTableNotaBerlangsung"].clear()
+        structProperty["changes"]["hapusAmbilTableNotaSelesai"].clear()
     def saveChanges():
         date=datetime.datetime.now()
         addNotaHeader(structProperty["changes"]["addNotaHeader"])
@@ -49,7 +55,9 @@ def main(view:View,super_page:Page):
         updateNotaHeaderStatusAndTanggalPairByIdAndDate(structProperty["changes"]["updateHeaderData"])
         updateDetailNotaPulangIdStok(structProperty["changes"]["changeDetailPulang"])
         removeAndAddAmbil(structProperty["changes"]["addAmbilPulang"],date)
-        
+        deleteNotaHeaderBelangsung(structProperty["changes"]["hapusNotaHeaderBerlangsung"])
+        deleteNotaDetailAmbilBelangsung(structProperty["changes"]["hapusDetailNotaBerlangsung"])
+        deleteAmbilTableNotaById(structProperty["changes"]["hapusAmbilTableNotaBerlangsung"])
 
     structProperty["headerData"]=loadNotaHeaderByTime(datetime.datetime.now(),31)
     structProperty["headerData"]=getAndJoinSalesById(structProperty["headerData"])
@@ -561,7 +569,7 @@ def main(view:View,super_page:Page):
             if flagOfAvailableId:
                 dataAmbil=getAmbilById(self.i["id_ambil"],datetime.datetime.strptime(self.tanggal,formatTanggal))
                 for _,row in dataAmbil.iterrows():
-                    newQuery.append((row["id_stok"],int(row["jumlah"]),datetimeToHashYearMonth(row["tanggal_stok"])))
+                    newQuery.append((row["id_stok"],int(row["jumlah"]),datetimeToHashYearMonth(datetime.datetime.strptime(row["tanggal_stok"],formatTanggal))))
             listOfAmbilTable=getPossibleStokResolver(int(barang[0]),int(stok),[*structProperty["changes"]["changeStokAvailable"],*newQuery])
             if listOfAmbilTable is None:
                 print("tidak cukup stok")
@@ -831,8 +839,7 @@ def main(view:View,super_page:Page):
     def notaPulangSelesaiHapusNotaPopUpButtonActionBatal(e):
         super_page.dialog.open=False
         super_page.update()
-    def notaPulangSelesaiHapusNotaPopUpButtonActionYa(e):
-        structProperty["pulangdata"]
+    def notaPulangSelesaiHapusNotaPopUpButtonActionYa(e,data):
         detailNotaContainer.clear()
         detailNotaContainer.append(NONEDATA)
         super_page.dialog.open=False
@@ -844,7 +851,34 @@ def main(view:View,super_page:Page):
         alertYaorBatalkan[0].on_click=notaPulangSelesaiHapusNotaPopUpButtonActionBatal
         alertYaorBatalkan[1].on_click=notaPulangSelesaiHapusNotaPopUpButtonActionYa
         super_page.update()
-    def detailNotaBerlangsungHapusPopUpButtonActionYa(e):
+    def detailNotaBerlangsungHapusPopUpButtonActionYa(e,data):
+        formatTanggal="%d/%m/%Y %H:%M"
+        tanggal=datetime.datetime.strptime(data["tanggal"],formatTanggal)
+        # "changeAmbil":[],
+        # "changeStokAvailable":[],
+        # "changeDetailPulang":[],
+        # "deleteAmbil":[],
+        # "deletePulang":[],
+        # "addNotaHeader":[],
+        # "updateHeaderData":[],
+        # "addDetailPulang":[],
+        # "addAmbilPulang":[],
+        # "hapusNotaHeaderBerlangsung":[],
+        # "hapusNotaHeaderSelesai":[],
+        # "hapusDetailNotaBerlangsung":[],
+        # "hapusDetailNotaSelesai":[],
+        # "hapusAmbilTableNotaBerlangsung":[],
+        # "hapusAmbilTableNotaSelesai":[]
+        #nge hapus data
+        structProperty["changes"]["hapusNotaHeaderBerlangsung"].append((data["id_nota"],tanggal))
+        structProperty["changes"]["hapusDetailNotaBerlangsung"].append((data["id_nota"],tanggal))
+        detailAmbil=loadNotaDetailAmbilbyIdNota(data["id_nota"],tanggal)
+        detailAmbil=getAndJoinAmbilById(detailAmbil,tanggal)
+        for index,row in detailAmbil.iterrows(): 
+            structProperty["changes"]["hapusAmbilTableNotaBerlangsung"].append((row["id_ambil"],tanggal))
+            structProperty["changes"]["changeStokAvailable"].append((row["id_stok"],int(row["jumlah"]),datetimeToHashYearMonth(tanggal)))
+        saveChanges()
+        clearStuctProperty()
         detailNotaContainer.clear()
         detailNotaContainer.append(NONEDATA)
         super_page.dialog.open=False
@@ -852,12 +886,12 @@ def main(view:View,super_page:Page):
     def detailNotaBerlangsungHapusPopUpButtonActionBatal(e):
         super_page.dialog.open=False
         super_page.update()
-    def alertDialogDetailNotaBerlangsungHapus(e):
+    def alertDialogDetailNotaBerlangsungHapus(e,data):
         card=createPopUpCard(Text("Hapus Nota?"),Text("Apakah Anda yakin ingin menghapus Nota? Nota yang sudah dihapus tidak bisa dikembalikan."),alertYaorBatalkan)
         super_page.dialog=card
         card.open=True
         alertYaorBatalkan[0].on_click=detailNotaBerlangsungHapusPopUpButtonActionBatal
-        alertYaorBatalkan[1].on_click=detailNotaBerlangsungHapusPopUpButtonActionYa
+        alertYaorBatalkan[1].on_click=lambda e : detailNotaBerlangsungHapusPopUpButtonActionYa(e,data)
         super_page.update()
     def alertDialogNotaPulangSimpanActionYa(e,data):
         formatTanggal="%d/%m/%Y %H:%M"
@@ -938,7 +972,7 @@ def main(view:View,super_page:Page):
         DetailNota,cardBottom=createNotaTableCard("DetailNota",data,detailNotaButton,rows_table,False,True,icon_row)
         detailNotaContainer.append(DetailNota)
         detailNotaButton[1].on_click=lambda e : createNotaBerlangsungPulang(e,data)
-        detailNotaButton[2].on_click=alertDialogDetailNotaBerlangsungHapus
+        detailNotaButton[2].on_click=lambda e : alertDialogDetailNotaBerlangsungHapus(e,data)
     def dataToDetailNotaSelesai(data):
         formatTanggal="%d/%m/%Y %H:%M"
         dataselesaipulang=structProperty["headerData"].loc[(structProperty["headerData"]["id_nota"]==data["id_nota"]) & (structProperty["headerData"]["jenis_transaksi"]==1) ]
@@ -986,8 +1020,10 @@ def main(view:View,super_page:Page):
     filterDetailNotaBerlangsung[1].on_change=filterWaktuNotaDanCashierNota
     searchButton.on_submit=filterWaktuNotaDanCashierNota
 
-    def hapusNotaBerlangsung(e):
+    def hapusNotaHeaderBerlangsung(data):
+        #nerima (row header)
         pass
+        
 
     class daftarNotaListAction():
         def __init__(self,data):
