@@ -57,7 +57,10 @@ def main(view:View,super_page:Page):
         removeAndAddAmbil(structProperty["changes"]["addAmbilPulang"],date)
         deleteNotaHeaderBelangsung(structProperty["changes"]["hapusNotaHeaderBerlangsung"])
         deleteNotaDetailAmbilBelangsung(structProperty["changes"]["hapusDetailNotaBerlangsung"])
+        deleteNotaHeaderSelesai(structProperty["changes"]["hapusNotaHeaderSelesai"])
+        deleteNotaDetailAmbilSelesai(structProperty["changes"]["hapusDetailNotaSelesai"])
         deleteAmbilTableNotaById(structProperty["changes"]["hapusAmbilTableNotaBerlangsung"])
+        deleteAmbilTableNotaById(structProperty["changes"]["hapusAmbilTableNotaSelesai"])
 
     structProperty["headerData"]=loadNotaHeaderByTime(datetime.datetime.now(),31)
     structProperty["headerData"]=getAndJoinSalesById(structProperty["headerData"])
@@ -801,59 +804,46 @@ def main(view:View,super_page:Page):
     def notaPulangSelesaikanNotaPopUpButtonActionBatal(e):
         super_page.dialog.open=False
         super_page.update()
-    def notaPulangSelesaikanNotaPopUpButtonActionYa(e,bottomCard,icon_row):
+    def notaPulangSelesaikanNotaPopUpButtonActionYa(e,bottomCard,icon_row,data):
         for i in icon_row:
             i[1].disabled=True
         saveChanges()
         clearStuctProperty()
         bottomCard.controls=detailNotaPulangSelesaiButton
-        detailNotaPulangSelesaiButton[0].on_click=lambda e : ChangeCardToeditTable(e,bottomCard,icon_row)
-        detailNotaPulangSelesaiButton[1].on_click=alertDialogNotaPulangSelesaiHapus
+        detailNotaPulangSelesaiButton[0].on_click=lambda e : ChangeCardToeditTable(e,bottomCard,icon_row,data)
+        detailNotaPulangSelesaiButton[1].on_click=lambda e : alertDialogNotaPulangSelesaiHapus(e,data)
         super_page.dialog.open=False
         super_page.update()
-    def notaPulangEditingActionbatalkan(e,bottomCard,icon_row):
+    def notaPulangEditingActionbatalkan(e,bottomCard,icon_row,data):
         for i in icon_row:
             i[1].disabled=True
         clearStuctProperty()
         bottomCard.controls=detailNotaPulangSelesaiButton
-        detailNotaPulangSelesaiButton[0].on_click=lambda e : ChangeCardToeditTable(e,bottomCard,icon_row)
-        detailNotaPulangSelesaiButton[1].on_click=alertDialogNotaPulangSelesaiHapus
-        super_page.dialog.open=False
+        detailNotaPulangSelesaiButton[0].on_click=lambda e : ChangeCardToeditTable(e,bottomCard,icon_row,data)
+        detailNotaPulangSelesaiButton[1].on_click=lambda e : alertDialogNotaPulangSelesaiHapus(e,data)
+        # super_page.dialog.open=False
         super_page.update()
-    def ChangeCardToeditTable(e,bottomCard,icon_row):
+    def ChangeCardToeditTable(e,bottomCard,icon_row,data):
         clearStuctProperty()
         for i in icon_row:
             i[1].disabled=False
         bottomCard.controls=notaPulangEditingButton
-        notaPulangEditingButton[0].on_click=lambda e : alertDialogNotaPulangSelesai(e,bottomCard,icon_row)
-        notaPulangEditingButton[1].on_click=lambda e : notaPulangEditingActionbatalkan(e,bottomCard,icon_row)
+        notaPulangEditingButton[0].on_click=lambda e : alertDialogNotaPulangSelesai(e,bottomCard,icon_row,data)
+        notaPulangEditingButton[1].on_click=lambda e : notaPulangEditingActionbatalkan(e,bottomCard,icon_row,data)
         super_page.update()
     #function di call untuk ngeluarin pop up di nota pulang yang selesai 
-    def alertDialogNotaPulangSelesai(e,bottomCard,icon_row):
+    def alertDialogNotaPulangSelesai(e,bottomCard,icon_row,data):
         card=createPopUpCard(Text("Simpan Nota Pulang"),Text("Apakah Anda yakin ingin menyimpan perubahan pada nota pulang?"),alertYaorBatalkan)
         super_page.dialog=card
         card.open=True
-        alertYaorBatalkan[1].on_click=lambda e : notaPulangSelesaikanNotaPopUpButtonActionYa(e,bottomCard,icon_row)
+        alertYaorBatalkan[1].on_click=lambda e : notaPulangSelesaikanNotaPopUpButtonActionYa(e,bottomCard,icon_row,data)
         alertYaorBatalkan[0].on_click= notaPulangSelesaikanNotaPopUpButtonActionBatal
         super_page.update()
     def notaPulangSelesaiHapusNotaPopUpButtonActionBatal(e):
         super_page.dialog.open=False
         super_page.update()
     def notaPulangSelesaiHapusNotaPopUpButtonActionYa(e,data):
-        detailNotaContainer.clear()
-        detailNotaContainer.append(NONEDATA)
-        super_page.dialog.open=False
-        super_page.update()
-    def alertDialogNotaPulangSelesaiHapus(e):
-        card=createPopUpCard(Text("Hapus Nota Pulang?"),Text("Apakah Anda yakin ingin menghapus Nota Pulang? Nota yang sudah dihapus tidak bisa dikembalikan.\n\nStatus nota akan kembali menjadi “Nota Berlangsung”!"),alertYaorBatalkan)
-        super_page.dialog=card
-        card.open=True
-        alertYaorBatalkan[0].on_click=notaPulangSelesaiHapusNotaPopUpButtonActionBatal
-        alertYaorBatalkan[1].on_click=notaPulangSelesaiHapusNotaPopUpButtonActionYa
-        super_page.update()
-    def detailNotaBerlangsungHapusPopUpButtonActionYa(e,data):
-        formatTanggal="%d/%m/%Y %H:%M"
-        tanggal=datetime.datetime.strptime(data["tanggal"],formatTanggal)
+        clearStuctProperty()
         # "changeAmbil":[],
         # "changeStokAvailable":[],
         # "changeDetailPulang":[],
@@ -869,7 +859,41 @@ def main(view:View,super_page:Page):
         # "hapusDetailNotaSelesai":[],
         # "hapusAmbilTableNotaBerlangsung":[],
         # "hapusAmbilTableNotaSelesai":[]
-        #nge hapus data
+        formatTanggal="%d/%m/%Y %H:%M"
+        tanggal=datetime.datetime.strptime(data["pulang"]["tanggal"],formatTanggal)
+        structProperty["changes"]["hapusNotaHeaderSelesai"].append((data["pulang"]["id_nota"],tanggal))
+        structProperty["changes"]["hapusDetailNotaSelesai"].append((data["pulang"]["id_nota"],tanggal))
+        structProperty["changes"]["updateHeaderData"].append((data["pulang"]["id_nota"],0,tanggal,pd.NA,0))
+        detailAmbil=loadNotaDetailPulangbyIdNota(data["pulang"]["id_nota"],tanggal)
+        detailAmbil=getAndJoinAmbilById(detailAmbil,tanggal)
+        for index,row in detailAmbil.iterrows(): 
+            structProperty["changes"]["hapusAmbilTableNotaSelesai"].append((row["id_ambil"],tanggal))
+            structProperty["changes"]["changeStokAvailable"].append((row["id_stok"],int(row["jumlah"]),datetimeToHashYearMonth(tanggal)))
+        saveChanges()
+        clearStuctProperty()
+        if filterDetailNotaBerlangsung[0].value is None:
+            time=31
+        else :
+            time=int(filterDetailNotaBerlangsung[0].value)
+        structProperty["headerData"]=loadNotaHeaderByTime(datetime.datetime.now(),time)
+        structProperty["headerData"]=getAndJoinSalesById(structProperty["headerData"])
+        daftarNotaListToContainer(structProperty["headerData"])
+        detailNotaContainer.clear()
+        detailNotaContainer.append(NONEDATA)
+        super_page.dialog.open=False
+        super_page.update()
+    def alertDialogNotaPulangSelesaiHapus(e,data):
+        card=createPopUpCard(Text("Hapus Nota Pulang?"),Text("Apakah Anda yakin ingin menghapus Nota Pulang? Nota yang sudah dihapus tidak bisa dikembalikan.\n\nStatus nota akan kembali menjadi “Nota Berlangsung”!"),alertYaorBatalkan)
+        super_page.dialog=card
+        card.open=True
+        alertYaorBatalkan[0].on_click=notaPulangSelesaiHapusNotaPopUpButtonActionBatal
+        alertYaorBatalkan[1].on_click=lambda e : notaPulangSelesaiHapusNotaPopUpButtonActionYa(e,data)
+        super_page.update()
+    #hapusNotaBerlangsung
+    def detailNotaBerlangsungHapusPopUpButtonActionYa(e,data):
+        clearStuctProperty()
+        formatTanggal="%d/%m/%Y %H:%M"
+        tanggal=datetime.datetime.strptime(data["tanggal"],formatTanggal)
         structProperty["changes"]["hapusNotaHeaderBerlangsung"].append((data["id_nota"],tanggal))
         structProperty["changes"]["hapusDetailNotaBerlangsung"].append((data["id_nota"],tanggal))
         detailAmbil=loadNotaDetailAmbilbyIdNota(data["id_nota"],tanggal)
@@ -879,6 +903,13 @@ def main(view:View,super_page:Page):
             structProperty["changes"]["changeStokAvailable"].append((row["id_stok"],int(row["jumlah"]),datetimeToHashYearMonth(tanggal)))
         saveChanges()
         clearStuctProperty()
+        if filterDetailNotaBerlangsung[0].value is None:
+            time=31
+        else :
+            time=int(filterDetailNotaBerlangsung[0].value)
+        structProperty["headerData"]=loadNotaHeaderByTime(datetime.datetime.now(),time)
+        structProperty["headerData"]=getAndJoinSalesById(structProperty["headerData"])
+        daftarNotaListToContainer(structProperty["headerData"])
         detailNotaContainer.clear()
         detailNotaContainer.append(NONEDATA)
         super_page.dialog.open=False
@@ -995,8 +1026,8 @@ def main(view:View,super_page:Page):
         detailNotaContainer.append(NotePulang)
         for i in icon_rowPulang:
             i[0].visible=False
-        detailNotaPulangSelesaiButton[0].on_click=lambda e : ChangeCardToeditTable(e,cardBottomPulang,icon_rowPulang)
-        detailNotaPulangSelesaiButton[1].on_click=alertDialogNotaPulangSelesaiHapus
+        detailNotaPulangSelesaiButton[0].on_click=lambda e : ChangeCardToeditTable(e,cardBottomPulang,icon_rowPulang,{"pulang":dataselesaipulang.iloc[0],"ambil":dataselesaiambil.iloc[0]})
+        detailNotaPulangSelesaiButton[1].on_click=lambda e : alertDialogNotaPulangSelesaiHapus(e,{"pulang":dataselesaipulang.iloc[0],"ambil":dataselesaiambil.iloc[0]} )
 
     def filterWaktuNotaDanCashierNota(e):
         detailNotaContainer.clear()
