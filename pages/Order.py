@@ -3,6 +3,7 @@ import sys
 sys.path.append("../")
 from utils.libs import *
 from utils.importer import *
+from utils.converter import *
 
 
 def main(view: View, super_page: Page):
@@ -10,6 +11,11 @@ def main(view: View, super_page: Page):
     # page.title = "Home"
     # page.
     # view.bgcolor = colors["Gray/50"]
+
+    listNamaSales = getSeriesIdAndNamaSales()
+    listNamaBarang = getSeriesIdAndNamaKopi()
+    listNamaToko = getSeriesIdAndNamaToko()
+    
 
     toko_dummy_data = [
         {
