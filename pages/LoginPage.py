@@ -10,8 +10,9 @@ def login_page(page: Page):
     page.window_height = 600
     page.window_resizable = False
     page.window_title_bar_buttons_hidden = True
-    # page.theme = colors['White']
     colors = load_colors()
+    # page.theme = colors['White']
+    page.bgcolor=colors["White"]
 
     login = Container(
         width=380,

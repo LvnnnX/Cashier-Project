@@ -15,7 +15,6 @@ def main(view: View, super_page: Page):
     stok_data = getFullStok(datetime.datetime.now())
     kopi_data = getSeriesFullKopi()
 
-
     style_selectable_round0 = ButtonStyle(
         shape=RoundedRectangleBorder(radius=0),
         color={
@@ -92,6 +91,8 @@ def main(view: View, super_page: Page):
         ),
     ]
 
+    modebarang = True
+
     barang_baru_button = TextButton(
         "Barang Baru",
         width=super_page.window_width / 100 * 40 / 100 * 20,
@@ -147,8 +148,6 @@ def main(view: View, super_page: Page):
         ),
     ]
 
-        
-
     PopUp_EditBarang_textfield_namabarang = TextField()
 
     PopUp_EditBarang_textfield_harga = TextField(input_filter=NumbersOnlyInputFilter())
@@ -165,21 +164,20 @@ def main(view: View, super_page: Page):
         else:
             alertSimpanBarang[0].disabled = True
         super_page.update()
-    
+
     PopUp_EditBarang_textfield_namabarang.on_change = popUp_editbarang_check
     PopUp_EditBarang_textfield_harga.on_change = popUp_editbarang_check
-    
+
     def popUp_tambahbaru_check(e):
         if PopUp_TambahBaru_textfield_namabarang.value != "" and PopUp_TambahBaru_textfield_harga.value != "":
             alertSimpanBarang[0].disabled = False
         else:
             alertSimpanBarang[0].disabled = True
         super_page.update()
-        
+
     PopUp_TambahBaru_textfield_namabarang.on_change = popUp_tambahbaru_check
     PopUp_TambahBaru_textfield_harga.on_change = popUp_tambahbaru_check
-        
-        
+
     PopUp_TambahBaru_photodummy = Image(
         src=IMGPATH / "dummy-order1.png",
         width=super_page.window_width / 100 * 10,
@@ -261,7 +259,7 @@ def main(view: View, super_page: Page):
 
             img.save(IMGPATH / "coffee" / f"{self.data['id_kopi']}.{img_ext}")
             super_page.dialog.open = False
-            data_body.update()
+            # data_body.update()
             super_page.update()
 
         def batalSimpan_clicked(self, e):
@@ -368,9 +366,9 @@ def main(view: View, super_page: Page):
                 "foto": f"{foto}",
                 "biaya_produksi": biaya_produksi,
             }
-            
+
             addKopiData(listofData=listofData, df=kopi_data, PATH=DATAPATH, saveImage=saveImage, imgfrom=imgfrom, imgto=IMGPATH / "coffee")
-            
+
             # refreshData(e)
             # print('runned')
 
@@ -458,6 +456,7 @@ def main(view: View, super_page: Page):
         jenis_stok_button[0].disabled = True
         jenis_stok_button[1].style = style_selectable_round0
         jenis_stok_button[1].disabled = False
+        modebarang = True
         super_page.update()
 
     def ManageStok_clicked(e):
@@ -465,6 +464,7 @@ def main(view: View, super_page: Page):
         jenis_stok_button[0].disabled = False
         jenis_stok_button[1].style = style_selected_round0
         jenis_stok_button[1].disabled = True
+        modebarang = False
         super_page.update()
 
     jenis_stok_button[0].on_click = ManageBarang_clicked
@@ -613,34 +613,140 @@ def main(view: View, super_page: Page):
 
         return items_list
 
-    data_body = Container(
-        width=super_page.window_width / 100 * 90,
-        height=super_page.window_height * 90 / 100
-        - (super_page.window_height * 35 / 100),
-        border_radius=10,
-        # bgcolor=colors['Black'],
-        content=Row(
-            # spacing=40,  # kesamping
-            run_spacing=super_page.window_height / 100 * 1,  # kebawah
-            alignment=MainAxisAlignment.START,
-            wrap=True,
-            scroll=ScrollMode.AUTO,
-            controls=[
-                # Container(
-                #     width=275,
-                #     height=275,
-                #     bgcolor=colors["Accent"],
-                #     content=Text(
-                #         value='1'
-                #     )
-                # ),
-                *get_items(
-                    super_page.window_width / 100 * 40,
-                    super_page.window_height - 150,
+    def get_manajemen_stok(N: int = 10, window_width=750, window_height=600):
+        items_list = []
+        isi_column = DataTable(
+            columns=[
+                DataColumn(
+                    Text(
+                        "No",
+                        size=12,
+                        width=super_page.window_width / 100 * 40 / 100 * 8,
+                    ),
+                    color=colors["Gray/400"],
                 ),
-            ],
-        ),
-    )
+                DataColumn(
+                    Text(
+                        "Barang",
+                        size=12,
+                        width=super_page.window_width / 100 * 40 / 100 * 20,
+                    ),
+                    color=colors["Gray/400"],
+                ),
+                DataColumn(
+                    Text(
+                        "Stok",
+                        size=12,
+                        width=super_page.window_width / 100 * 40 / 100 * 8,
+                    ),
+                    color=colors["Gray/400"],
+                ),
+                DataColumn(
+                    Text(
+                        "Jumlah",
+                        size=12,
+                        width=super_page.window_width / 100 * 40 / 100 * 8,
+                    ),
+                    color=colors["Gray/400"],
+                ),
+                DataColumn(
+                    Text(
+                        "Status",
+                        size=12,
+                        width=super_page.window_width / 100 * 40 / 100 * 8,
+                    ),
+                    color=colors["Gray/400"],
+                ),
+                DataColumn(
+                    Text(
+                        "Tanggal Exp",
+                        size=12,
+                        width=super_page.window_width / 100 * 40 / 100 * 12,
+                    ),
+                    color=colors["Gray/400"],
+                ),
+                DataColumn(
+                    Text(
+                        "Aksi",
+                        size=12,
+                        width=super_page.window_width / 100 * 40 / 100 * 8,
+                        color=colors["Gray/400"],
+                    )
+                ),
+            ]
+        )
+        for key, value in stok_data.iterrows():
+            edit_button = Container(
+                alignment=alignment.center_right,
+                data=key,
+                content=ElevatedButton(
+                    "Edit Stok",
+                    bgcolor=colors["Primary/500"],
+                    color=colors["White"],
+                    on_click=...,
+                    style=ButtonStyle(
+                        shape={
+                            MaterialState.FOCUSED: RoundedRectangleBorder(radius=2),
+                            MaterialState.HOVERED: RoundedRectangleBorder(radius=8),
+                            MaterialState.DEFAULT: RoundedRectangleBorder(radius=2),
+                        }
+                    ),
+                ),
+            )
+            items_list.append(
+                Container(
+                    width=super_page.window_width / 100 * 90,
+                    height=super_page.window_height / 100 * 5,
+                    bgcolor=colors["Primary/100"],
+                    margin=margin.only(left=10, right=10),
+                    border_radius=16,
+                    content=Column(controls=[Row(controls=[])]),
+                )
+            )
+
+    if modebarang:
+        data_body = Container(
+            width=super_page.window_width / 100 * 90,
+            height=super_page.window_height * 90 / 100
+            - (super_page.window_height * 35 / 100),
+            border_radius=10,
+            # bgcolor=colors['Black'],
+            content=Row(
+                # spacing=40,  # kesamping
+                run_spacing=super_page.window_height / 100 * 1,  # kebawah
+                alignment=MainAxisAlignment.START,
+                wrap=True,
+                scroll=ScrollMode.AUTO,
+                controls=[
+                    # Container(
+                    #     width=275,
+                    #     height=275,
+                    #     bgcolor=colors["Accent"],
+                    #     content=Text(
+                    #         value='1'
+                    #     )
+                    # ),
+                    *get_items(
+                        super_page.window_width / 100 * 40,
+                        super_page.window_height - 150,
+                    ),
+                ],
+            ),
+        )
+    else:
+        data_body = Container(
+            width=super_page.window_width / 100 * 90,
+            height=super_page.window_height * 90 / 100
+            - (super_page.window_height * 35 / 100),
+            border_radius=10,
+            content=Column(
+                run_spacing=5,
+                alignment=MainAxisAlignment.START,
+                wrap=True,
+                scroll=ScrollMode.AUTO,
+                controls=[],
+            ),
+        )
 
     body = Container(
         content=Container(
