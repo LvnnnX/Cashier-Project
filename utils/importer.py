@@ -482,4 +482,27 @@ def deleteNotaHeaderSelesai(listOfQuery):
 #         rowValue=[]
 #         for z in dictonary[i]:
 #             if stokCsv[]
-        
+
+# def getStokIdAmountByNotaId(id_nota,tanggal:datetime.datetime):
+#     stringStrip='%d/%m/%Y %H:%M'
+#     Year=tanggal.strftime("%Y")
+#     Month=HASHMONTH[int(tanggal.strftime("%m"))-1]
+#     Day=tanggal.strftime("%d")
+#     headerCsv=pd.read_csv(DATAPATH / "Nota" / Year / Month / "nota_header.csv")
+#     headerCsv=headerCsv.loc[headerCsv["id_nota"].astype(str)==id_nota]
+#     ambilCsv=pd.DataFrame(columns=["id_ambil","id_stok","tanggal_stok","jumlah"],dtype=[str,str,str,np.int128])
+#     for index,row in headerCsv.iterrows():
+#         tanggalRow=datetime.datetime.strptime(row["tanggal"])
+#         Year=tanggalRow.strftime("%Y")
+#         Month=HASHMONTH[int(tanggalRow.strftime("%m"))-1]
+#         tempCsv=pd.read_csv(DATAPATH / "Coffee" / Year / Month / "ambil.csv")
+#         tempCsv=tempCsv.loc[tempCsv["id_stok"].astype(str)==row["id_nota"]]
+#         ambilCsv=pd.concat([ambilCsv,tempCsv])
+#     stok=pd.DataFrame(columns=["id_ambil","id_stok","tanggal_stok","jumlah"],dtype=[str,str,str,np.int128])
+#     for index,row in ambilCsv.iterrows():
+#         tanggalRow=datetime.datetime.strptime(row["tanggal"])
+#         Year=tanggalRow.strftime("%Y")
+#         Month=HASHMONTH[int(tanggalRow.strftime("%m"))-1]
+#         tempCsv=pd.read_csv(DATAPATH / "Coffee" / Year / Month / "ambil.csv")
+#         tempCsv=tempCsv.loc[tempCsv["id_stok"].astype(str)==row["id_nota"]]
+#         ambilCsv=pd.concat([ambilCsv,tempCsv])
