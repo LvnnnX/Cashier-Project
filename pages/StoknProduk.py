@@ -6,7 +6,10 @@ from utils.importer import *
 from utils.converter import *
 
 
+modebarang = True
+
 def main(view: View, super_page: Page):
+    global modebarang
     colors = load_colors()
 
     listNamaSales = getSeriesIdAndNamaSales()
@@ -91,8 +94,6 @@ def main(view: View, super_page: Page):
         ),
     ]
 
-    modebarang = True
-
     barang_baru_button = TextButton(
         "Barang Baru",
         width=super_page.window_width / 100 * 40 / 100 * 20,
@@ -159,6 +160,9 @@ def main(view: View, super_page: Page):
     PopUp_TambahBaru_textfield_harga = TextField(input_filter=NumbersOnlyInputFilter(), error_text="Harga tidak boleh kosong")
 
     def popUp_editbarang_check(e):
+        """
+        Fungsi ini akan dijalankan saat ada perubahan pada form edit barang
+        """
         if PopUp_EditBarang_textfield_namabarang.value != "" and PopUp_EditBarang_textfield_harga.value != "":
             alertSimpanBarang[0].disabled = False
         else:
@@ -169,6 +173,9 @@ def main(view: View, super_page: Page):
     PopUp_EditBarang_textfield_harga.on_change = popUp_editbarang_check
 
     def popUp_tambahbaru_check(e):
+        """
+        Fungsi ini akan dijalankan saat ada perubahan pada form tambah barang baru
+        """
         if PopUp_TambahBaru_textfield_namabarang.value != "" and PopUp_TambahBaru_textfield_harga.value != "":
             alertSimpanBarang[0].disabled = False
         else:
@@ -178,19 +185,10 @@ def main(view: View, super_page: Page):
     PopUp_TambahBaru_textfield_namabarang.on_change = popUp_tambahbaru_check
     PopUp_TambahBaru_textfield_harga.on_change = popUp_tambahbaru_check
 
-    PopUp_TambahBaru_photodummy = Image(
-        src=IMGPATH / "dummy-order1.png",
-        width=super_page.window_width / 100 * 10,
-        height=super_page.window_width / 100 * 10,
-        expand=True,
-        # fit=ImageFit.NONE,
-        # repeat=ImageRepeat.NO_REPEAT,
-        border_radius=border_radius.all(8),
-        # margin=margin.only(left=super_page.window_width/100 * 5)
-        # left=super_page.window_width/100 * 5
-    )
-
     class UploadFile:
+        """
+        Class ini digunakan untuk membuat form upload file
+        """
         def __init__(self):
             self.selected_files = Text()
             self.UploadFile_PhotoDummy = Image(
@@ -221,6 +219,9 @@ def main(view: View, super_page: Page):
             )
 
         def pick_files_result(self, e):
+            """
+            Fungsi ini akan dijalankan saat file berhasil diupload dan mengembalikan hasil upload file
+            """
             self.selected_files.value = (
                 ", ".join(map(lambda f: f.name, e.files)) if e.files else "Cancelled!"
             )
@@ -229,7 +230,13 @@ def main(view: View, super_page: Page):
             super_page.update()
 
     class PopUp_EditBarang:
+        """
+        Class ini digunakan untuk membuat pop-up saat menekan tombol edit barang
+        Memerlukan initial data barang yang akan diubah {nama, harga, id_kopi, foto}
+        
+        """
         def __init__(self, data):
+            
             self.data = data
             self.PopUp_EditBarang_textfield_namabarang = TextField(
                 value=self.data["nama"]
@@ -242,6 +249,9 @@ def main(view: View, super_page: Page):
             )
 
         def changeData(self, nama, harga, id_kopi, img_path):
+            """
+            Fungsi ini akan mengubah data barang yang ada di database
+            """
             findIndex = kopi_data[kopi_data["id_kopi"] == id_kopi].index[0]
             kopi_data.at[findIndex, "nama"] = nama
             kopi_data.at[findIndex, "harga"] = harga
@@ -249,6 +259,9 @@ def main(view: View, super_page: Page):
             # kopi_data.at[findIndex, "id_kopi"] = id_kopi
 
         def simpanBarang_clicked(self, e):
+            """
+            Fungsi ini akan dijalankan saat tombol simpan barang ditekan
+            """
             nama = self.PopUp_EditBarang_textfield_namabarang.value
             harga = self.PopUp_EditBarang_textfield_harga.value
             id_kopi = self.PopUp_EditBarang_idBarang.value
@@ -263,10 +276,16 @@ def main(view: View, super_page: Page):
             super_page.update()
 
         def batalSimpan_clicked(self, e):
+            """
+            Fungsi ini akan dijalankan saat tombol batal ditekan
+            """
             super_page.dialog.open = False
             super_page.update()
 
         def EditBarang_PopUp(self, e):
+            """
+            Fungsi ini akan mengembalikan AlertDialog yang berisi form untuk mengubah barang
+            """
             content = Container(
                 width=super_page.window_width / 100 * 40,
                 content=Column(
@@ -336,16 +355,29 @@ def main(view: View, super_page: Page):
             )
 
         def alert(self, e):
+            """
+            Fungsi ini akan menampilkan pop-up edit barang
+            """
             card = self.EditBarang_PopUp(e)
             super_page.dialog = card
             card.open = True
             super_page.update()
 
     class PopUp_TambahBaru:
+        """
+        Class ini digunakan untuk membuat pop-up saat menekan tombol tambah barang baru
+        """
         def __init__(self):
             self.initUpload = UploadFile()
 
         def simpanBarang_clicked(self, e):
+            """
+            Fungsi ini akan dijalankan saat tombol simpan barang ditekan
+            
+            Mengirim data barang baru ke database (id_kopi, nama, harga, foto, biaya_produksi)
+            
+            
+            """
             id_kopi = kopi_data["id_kopi"].max() + 1
             nama = PopUp_TambahBaru_textfield_namabarang.value
             harga = PopUp_TambahBaru_textfield_harga.value
@@ -368,19 +400,20 @@ def main(view: View, super_page: Page):
             }
 
             addKopiData(listofData=listofData, df=kopi_data, PATH=DATAPATH, saveImage=saveImage, imgfrom=imgfrom, imgto=IMGPATH / "coffee")
-
-            # refreshData(e)
-            # print('runned')
-
-            # refreshData(e)
             super_page.dialog.open = False
             super_page.update()
 
         def batalSimpan_clicked(self, e):
+            """
+            Fungsi ini akan dijalankan saat tombol batal ditekan
+            """
             super_page.dialog.open = False
             super_page.update()
 
         def TambahBarang_PopUp(self, e):
+            """
+            Fungsi ini akan mengembalikan AlertDialog yang berisi form untuk menambahkan barang baru
+            """
             # initUpload = UploadFile()
             content = Container(
                 width=super_page.window_width / 100 * 40,
@@ -444,6 +477,9 @@ def main(view: View, super_page: Page):
             )
 
         def alert(self, e):
+            """
+            Fungsi ini akan menampilkan pop-up tambah barang baru
+            """
             card = self.TambahBarang_PopUp(e)
             super_page.dialog = card
             card.open = True
@@ -451,26 +487,11 @@ def main(view: View, super_page: Page):
 
     barang_baru_button.on_click = PopUp_TambahBaru().alert
 
-    def ManageBarang_clicked(e):
-        jenis_stok_button[0].style = style_selected_round0
-        jenis_stok_button[0].disabled = True
-        jenis_stok_button[1].style = style_selectable_round0
-        jenis_stok_button[1].disabled = False
-        modebarang = True
-        super_page.update()
-
-    def ManageStok_clicked(e):
-        jenis_stok_button[0].style = style_selectable_round0
-        jenis_stok_button[0].disabled = False
-        jenis_stok_button[1].style = style_selected_round0
-        jenis_stok_button[1].disabled = True
-        modebarang = False
-        super_page.update()
-
-    jenis_stok_button[0].on_click = ManageBarang_clicked
-    jenis_stok_button[1].on_click = ManageStok_clicked
-
     def changeCurrency(harga):
+        """
+        Fungsi ini akan mengubah harga menjadi format mata uang rupiah
+        Contoh: 1000000 -> 1.000.000,00
+        """
         str_harga = ""
         harga = str(harga)
         try:
@@ -505,6 +526,13 @@ def main(view: View, super_page: Page):
             return str_harga
 
     def get_items(N: int = 10, window_width=750, window_height=600):
+        """
+        Fungsi ini mengembalikan list item yang akan ditampilkan pada halaman stok dan produk (default 10 item)
+        
+        N (int) : jumlah item yang akan ditampilkan
+        window_width (int) : lebar window (layar)
+        window_height (int) : tinggi window (layar)
+        """
         items_list = []
         joinedData = getJoinedStokKopi(stok_data, kopi_data)
         for key, value in kopi_data.iterrows():
@@ -614,139 +642,151 @@ def main(view: View, super_page: Page):
         return items_list
 
     def get_manajemen_stok(N: int = 10, window_width=750, window_height=600):
-        items_list = []
-        isi_column = DataTable(
-            columns=[
-                DataColumn(
-                    Text(
-                        "No",
-                        size=12,
-                        width=super_page.window_width / 100 * 40 / 100 * 8,
-                    ),
-                    color=colors["Gray/400"],
-                ),
-                DataColumn(
-                    Text(
-                        "Barang",
-                        size=12,
-                        width=super_page.window_width / 100 * 40 / 100 * 20,
-                    ),
-                    color=colors["Gray/400"],
-                ),
-                DataColumn(
-                    Text(
-                        "Stok",
-                        size=12,
-                        width=super_page.window_width / 100 * 40 / 100 * 8,
-                    ),
-                    color=colors["Gray/400"],
-                ),
-                DataColumn(
-                    Text(
-                        "Jumlah",
-                        size=12,
-                        width=super_page.window_width / 100 * 40 / 100 * 8,
-                    ),
-                    color=colors["Gray/400"],
-                ),
-                DataColumn(
-                    Text(
-                        "Status",
-                        size=12,
-                        width=super_page.window_width / 100 * 40 / 100 * 8,
-                    ),
-                    color=colors["Gray/400"],
-                ),
-                DataColumn(
-                    Text(
-                        "Tanggal Exp",
-                        size=12,
-                        width=super_page.window_width / 100 * 40 / 100 * 12,
-                    ),
-                    color=colors["Gray/400"],
-                ),
-                DataColumn(
-                    Text(
-                        "Aksi",
-                        size=12,
-                        width=super_page.window_width / 100 * 40 / 100 * 8,
-                        color=colors["Gray/400"],
-                    )
-                ),
-            ]
-        )
-        for key, value in stok_data.iterrows():
-            edit_button = Container(
-                alignment=alignment.center_right,
-                data=key,
-                content=ElevatedButton(
-                    "Edit Stok",
-                    bgcolor=colors["Primary/500"],
-                    color=colors["White"],
-                    on_click=...,
-                    style=ButtonStyle(
-                        shape={
-                            MaterialState.FOCUSED: RoundedRectangleBorder(radius=2),
-                            MaterialState.HOVERED: RoundedRectangleBorder(radius=8),
-                            MaterialState.DEFAULT: RoundedRectangleBorder(radius=2),
-                        }
-                    ),
-                ),
-            )
-            items_list.append(
-                Container(
-                    width=super_page.window_width / 100 * 90,
-                    height=super_page.window_height / 100 * 5,
-                    bgcolor=colors["Primary/100"],
-                    margin=margin.only(left=10, right=10),
-                    border_radius=16,
-                    content=Column(controls=[Row(controls=[])]),
+        """
+        Fungsi ini mengembalikan list item yang akan ditampilkan pada halaman manajemen stok (default 10 item)
+
+        N (int) : jumlah item yang akan ditampilkan
+        window_width (int) : lebar window (layar)
+        window_height (int) : tinggi window (layar)
+        """
+        # items_list = []
+        isi_column = []
+        joinedData = getJoinedStokKopi(stok_data, kopi_data)
+        for key, value in joinedData.iterrows():
+            # print(value)
+            if key + 1 == N:
+                break
+            icon_cells = [IconButton(icon=icons.DELETE), IconButton(icon=icons.EDIT)]
+            isi_column.append(
+                DataRow(
+                    cells=[
+                        DataCell(Text(str(key + 1))),  # No
+                        DataCell(Text(value["nama"].capitalize())),  # Barang
+                        DataCell(Text(changeCurrency(value["stok"]))),  # Jumlah
+                        DataCell(Text(str("status"))),  # Status
+                        DataCell(Text(str(value["tanggal_exp"]))),  # Tanggal Expired
+                        DataCell(
+                            Row(controls=icon_cells, alignment=alignment.top_center)
+                        ),  # action button
+                    ]
                 )
             )
+        return isi_column
 
-    if modebarang:
-        data_body = Container(
-            width=super_page.window_width / 100 * 90,
-            height=super_page.window_height * 90 / 100
-            - (super_page.window_height * 35 / 100),
-            border_radius=10,
-            # bgcolor=colors['Black'],
-            content=Row(
-                # spacing=40,  # kesamping
-                run_spacing=super_page.window_height / 100 * 1,  # kebawah
-                alignment=MainAxisAlignment.START,
-                wrap=True,
-                scroll=ScrollMode.AUTO,
-                controls=[
-                    # Container(
-                    #     width=275,
-                    #     height=275,
-                    #     bgcolor=colors["Accent"],
-                    #     content=Text(
-                    #         value='1'
-                    #     )
-                    # ),
-                    *get_items(
-                        super_page.window_width / 100 * 40,
-                        super_page.window_height - 150,
-                    ),
-                ],
-            ),
+    data_body = Container(
+        width=super_page.window_width / 100 * 90,
+        height=super_page.window_height * 90 / 100
+        - (super_page.window_height * 35 / 100),
+        border_radius=10,
+        content=Row(
+            # spacing=40,  # kesamping
+            run_spacing=super_page.window_height / 100 * 1,  # kebawah
+            alignment=MainAxisAlignment.START,
+            wrap=True,
+            scroll=ScrollMode.AUTO,
+            controls=[
+                *get_items(
+                    super_page.window_width / 100 * 40,
+                    super_page.window_height - 150,
+                ),
+            ],
+        ),
+    )
+
+    def ManageBarang_clicked(e):
+        """
+        Fungsi ini akan dijalankan saat tombol Manajemen Barang ditekan
+        """
+        jenis_stok_button[0].style = style_selected_round0
+        jenis_stok_button[0].disabled = True
+        jenis_stok_button[1].style = style_selectable_round0
+        jenis_stok_button[1].disabled = False
+        data_body.content = Row(
+            # spacing=40,  # kesamping
+            run_spacing=super_page.window_height / 100 * 1,  # kebawah
+            alignment=MainAxisAlignment.START,
+            wrap=True,
+            scroll=ScrollMode.AUTO,
+            controls=[
+                *get_items(
+                    super_page.window_width / 100 * 40,
+                    super_page.window_height - 150,
+                ),
+            ],
         )
-    else:
-        data_body = Container(
-            width=super_page.window_width / 100 * 90,
-            height=super_page.window_height * 90 / 100
-            - (super_page.window_height * 35 / 100),
-            border_radius=10,
-            content=Column(
-                run_spacing=5,
-                alignment=MainAxisAlignment.START,
-                wrap=True,
-                scroll=ScrollMode.AUTO,
-                controls=[],
-            ),
+        super_page.update()
+
+    def ManageStok_clicked(e):
+        """
+        Fungsi ini akan dijalankan saat tombol Manajemen Stok ditekan
+        """
+        jenis_stok_button[0].style = style_selectable_round0
+        jenis_stok_button[0].disabled = False
+        jenis_stok_button[1].style = style_selected_round0
+        jenis_stok_button[1].disabled = True
+        data_body.content = Column(
+            controls=[
+                DataTable(
+                    width=super_page.window_width / 100 * 90,
+                    columns=[
+                        DataColumn(
+                            Text(
+                                "No",
+                                size=12,
+                                width=super_page.window_width / 100 * 8,
+                            # color=colors["Gray/400"],
+                            ),
+                        ),
+                        DataColumn(
+                            Text(
+                                "Barang",
+                                size=12,
+                                # width=super_page.window_width / 100 * 40 / 100 * 20,
+                            ),
+                            # color=colors["Gray/400"],
+                        ),
+                        DataColumn(
+                            Text(
+                                "Jumlah",
+                                size=12,
+                                # width=super_page.window_width / 100 * 40 / 100 * 8,
+                            ),
+                            # color=colors["Gray/400"],
+                        ),
+                        DataColumn(
+                            Text(
+                                "Status",
+                                size=12,
+                                # width=super_page.window_width / 100 * 40 / 100 * 8,
+                            ),
+                            # color=colors["Gray/400"],
+                        ),
+                        DataColumn(
+                            Text(
+                                "Tanggal Exp",
+                                size=12,
+                                # width=super_page.window_width / 100 * 40 / 100 * 12,
+                            ),
+                            # color=colors["Gray/400"],
+                        ),
+                        DataColumn(
+                            Text(
+                                "Aksi",
+                                size=12,
+                                # width=super_page.window_width / 100 * 40 / 100 * 8,
+                                # color=colors["Gray/400"],
+                            )
+                        ),
+                    ],
+                    rows=[*get_manajemen_stok(10)],
+                )
+            ]
         )
+
+        super_page.update()
+
+    jenis_stok_button[0].on_click = ManageBarang_clicked
+    jenis_stok_button[1].on_click = ManageStok_clicked
 
     body = Container(
         content=Container(

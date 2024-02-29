@@ -236,10 +236,12 @@ def getFullStok(date: datetime.datetime):
     return stokCsv
 
 def getJoinedStokKopi(df1:pd.DataFrame,df2:pd.DataFrame):
-    df1 = df1[['id_kopi', 'stok']]
-    df2 = df2[['id_kopi', 'nama']]
+    # df1 = df1[['id_kopi', 'stok']]
+    # df2 = df2[['id_kopi', 'nama']]
     # df1["id_kopi"] = df1["id_kopi"].astype(str)
     # df2["id_kopi"] = df2["id_kopi"].astype(str)
+    df1 = df1.copy()
+    df2 = df2.copy()
     df1.set_index("id_kopi",inplace=True)
     df2.set_index("id_kopi",inplace=True)
     joined = df1.join(df2,how="inner",rsuffix="_kopi")
