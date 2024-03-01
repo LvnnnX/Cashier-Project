@@ -3,6 +3,7 @@ from utils.importer import *
 import pages.LoginPage as lg
 import pages.DaftarNota as dn
 import pages.StoknProduk as sp
+import pages.Analitik as al
 import component.Navbar as nv
 # import pages.admin as ad
 import pages.Order as nb
@@ -91,6 +92,15 @@ def main(page: Page):
                 )   
             page.views.append(StokdanProduk)
             sp.main(StokdanProduk,page)
+        elif route == "Analitik":
+            Analitik=View(
+                    "/Analitik",
+                    [
+                        page.haeder,
+                    ],
+                )
+            page.views.append(Analitik)
+            al.main(Analitik,page)
         page.update()
 
     def view_pop(view):

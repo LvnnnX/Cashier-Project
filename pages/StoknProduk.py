@@ -5,9 +5,6 @@ from utils.libs import *
 from utils.importer import *
 from utils.converter import *
 
-
-modebarang = True
-
 def main(view: View, super_page: Page):
     global modebarang
     colors = load_colors()
@@ -378,7 +375,7 @@ def main(view: View, super_page: Page):
             
             
             """
-            id_kopi = kopi_data["id_kopi"].max() + 1
+            id_kopi = int(kopi_data["id_kopi"].max()) + 1
             nama = PopUp_TambahBaru_textfield_namabarang.value
             harga = PopUp_TambahBaru_textfield_harga.value
             try:
@@ -668,7 +665,8 @@ def main(view: View, super_page: Page):
                         DataCell(
                             Row(controls=icon_cells, alignment=alignment.top_center)
                         ),  # action button
-                    ]
+                    ],
+                    
                 )
             )
         return isi_column
