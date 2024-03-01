@@ -165,6 +165,7 @@ def getPossibleStokResolver(idKopi,jumlahPesanan,listOfQuery:list):
         for z in listOfQueryCopy:
             if len(stokCsv.loc[stokCsv["id_stok"]==z[0]])>0:
                 stokCsv.loc[stokCsv["id_stok"]==z[0],"stok"]=stokCsv.loc[stokCsv["id_stok"]==z[0],"stok"]+z[1]
+
                 removeList.append(z)
         for k in removeList:
             listOfQueryCopy.remove(k)
@@ -192,35 +193,6 @@ def getPossibleStokResolver(idKopi,jumlahPesanan,listOfQuery:list):
     return []
     
 
-
-#listStokQuery([[id_ambil,id_stok,tanggal,rowStok],[...]...])
-def removeAndAddAmbil(listOfQuery,date:datetime.datetime):
-    Year=date.strftime("%Y")
-    Month=HASHMONTH[int(date.strftime("%m"))-1]
-    Day=date.strftime("%d")
-    ambilCsv=pd.read_csv(DATAPATH / "Coffee" / Year / Month / "ambil.csv")
-    changeCsv=ambilCsv
-    for singleQuery in listOfQuery:
-        changeCsv=changeCsv.loc[changeCsv["id_ambil"].astype(str)!=str(singleQuery[0][0])].reset_index(drop=True)
-        for k in singleQuery:
-            changeCsv.loc[len(changeCsv)]={
-                "id_ambil":k[0],
-                "id_stok":k[1],
-                "tanggal_stok":k[2].strftime("%d/%m/%Y %H:%M"),
-                "jumlah":float(k[3])
-            }
-    changeCsv.to_csv(DATAPATH / "Coffee" / Year / Month / "ambil.csv",index=False)
-    
-
-
-def getAndJoinKopiById(dataFrame:pd.DataFrame)->pd.DataFrame:
-    dataFrame["id_kopi"]=dataFrame["id_kopi"].astype(str)
-    df=dataFrame.set_index("id_kopi")
-    kopiCsv=pd.read_csv(DATAPATH / "Coffee" / "kopi.csv")
-    kopiCsv["id_kopi"]=kopiCsv["id_kopi"].astype(str)
-    kopiCsv.set_index("id_kopi",inplace=True)
-    kopi=df.join(kopiCsv,how='inner',rsuffix="_kopi")
-    return kopi.reset_index()
 
 def getAndJoinSalesById(dataFrame:pd.DataFrame):
     df=dataFrame.set_index("id_sales")
@@ -255,29 +227,90 @@ def getIdTokoByName(nama:str):
     id_toko=tokoCsv.T[nama]["id_toko"]
     return id_toko
 
-def getIdKopiByName(nama:str):
-    kopiCsv=pd.read_csv(DATAPATH / "Coffee" / "kopi.csv")
-    kopiCsv.set_index("nama",inplace=True)
-    id_kopi=kopiCsv.T[nama]["id_kopi"]
+
+
+
+# listStokQuery([[id_ambil,id_stok,tanggal,rowStok],[...]...])
+def removeAndAddAmbil(listOfQuery, date: datetime.datetime):
+    Year = date.strftime("%Y")
+    Month = HASHMONTH[int(date.strftime("%m")) - 1]
+    Day = date.strftime("%d")
+    ambilCsv = pd.read_csv(DATAPATH / "Coffee" / Year / Month / "ambil.csv")
+    changeCsv = ambilCsv
+    for singleQuery in listOfQuery:
+        changeCsv = changeCsv.loc[changeCsv["id_ambil"] != singleQuery[0][0]]
+        for k in singleQuery:
+            changeCsv.loc[len(changeCsv)] = {
+                "id_ambil": k[0],
+                "id_stok": k[1],
+                "tanggal_stok": k[2].strftime("%d/%m/%Y %H:%M"),
+                "jumlah": float(k[3]),
+            }
+    changeCsv.to_csv(DATAPATH / "Coffee" / Year / Month / "ambil.csv", index=False)
+
+
+def getAndJoinKopiById(dataFrame: pd.DataFrame):
+    dataFrame["id_kopi"] = dataFrame["id_kopi"].astype(str)
+    df = dataFrame.set_index("id_kopi")
+    kopiCsv = pd.read_csv(DATAPATH / "Coffee" / "kopi.csv")
+    kopiCsv["id_kopi"] = kopiCsv["id_kopi"].astype(str)
+    kopiCsv.set_index("id_kopi", inplace=True)
+    kopi = df.join(kopiCsv, how="inner", rsuffix="_kopi")
+    return kopi.reset_index()
+
+
+def getFullStok(date: datetime.datetime):
+    Year = date.strftime("%Y")
+    Month = HASHMONTH[int(date.strftime("%m")) - 1]
+    Day = date.strftime("%d")
+    stokCsv = pd.read_csv(DATAPATH / "Coffee" / Year / Month / "stok.csv")
+    return stokCsv
+
+def getJoinedStokKopi(df1:pd.DataFrame,df2:pd.DataFrame):
+    # df1 = df1[['id_kopi', 'stok']]
+    # df2 = df2[['id_kopi', 'nama']]
+    # df1["id_kopi"] = df1["id_kopi"].astype(str)
+    # df2["id_kopi"] = df2["id_kopi"].astype(str)
+    df1 = df1.copy()
+    df2 = df2.copy()
+    df1.set_index("id_kopi",inplace=True)
+    df2.set_index("id_kopi",inplace=True)
+    joined = df1.join(df2,how="inner",rsuffix="_kopi")
+    return joined.reset_index()
+
+
+def getIdKopiByName(nama: str):
+    kopiCsv = pd.read_csv(DATAPATH / "Coffee" / "kopi.csv")
+    kopiCsv.set_index("nama", inplace=True)
+    id_kopi = kopiCsv.T[nama]["id_kopi"]
     return id_kopi
 
+
 def getSeriesIdAndNamaSales():
-    df=pd.read_csv(DATAPATH / "Employee" / "sales.csv")
-    uniqueSalesName=df[["id_sales","nama"]]
+    df = pd.read_csv(DATAPATH / "Employee" / "sales.csv")
+    uniqueSalesName = df[["id_sales", "nama"]]
     return uniqueSalesName
 
+
 def getSeriesIdAndNamaKopi():
-    df=pd.read_csv(DATAPATH / "Coffee" / "kopi.csv")
-    uniqueBarangName=df[["id_kopi","nama"]]
+    df = pd.read_csv(DATAPATH / "Coffee" / "kopi.csv")
+    uniqueBarangName = df[["id_kopi", "nama"]]
     return uniqueBarangName
 
+
 def getSeriesIdAndNamaToko():
-    df=pd.read_csv(DATAPATH / "toko" / "toko.csv")
-    uniqueTokoName=df[["id_toko","nama"]]
+    df = pd.read_csv(DATAPATH / "toko" / "toko.csv")
+    uniqueTokoName = df[["id_toko", "nama"]]
     return uniqueTokoName
 
+
+def getSeriesFullKopi():
+    kopiCsv = pd.read_csv(DATAPATH / "Coffee" / "kopi.csv")
+    return kopiCsv
+
+
 def getKaryawanDataById(IdKaryawan):
-    df=pd.read_csv(DATAPATH/ "Employee" / "Karyawan.csv").set_index("id_karyawan")
+    df = pd.read_csv(DATAPATH / "Employee" / "Karyawan.csv").set_index("id_karyawan")
     return df.iloc[IdKaryawan].reset_index()
 
 
@@ -506,3 +539,56 @@ def deleteNotaHeaderSelesai(listOfQuery):
 #         tempCsv=pd.read_csv(DATAPATH / "Coffee" / Year / Month / "ambil.csv")
 #         tempCsv=tempCsv.loc[tempCsv["id_stok"].astype(str)==row["id_nota"]]
 #         ambilCsv=pd.concat([ambilCsv,tempCsv])
+def addKopiData(listofData, df, PATH=DATAPATH, saveImage=False, imgfrom=None, imgto=None):
+    """"id_kopi,nama,harga,biaya_produksi,foto
+        1,robusta,15000,10000,dummy-order1.png"""
+    # print(listofData, " - ", df, " - ", PATH)
+    df.loc[len(df)] = listofData
+    df.to_csv(PATH / "Coffee" / "kopi.csv", index=False)
+    # print('saved')
+    if saveImage:
+        # print('run')
+        
+        shutil.copyfile(imgfrom, imgto / listofData['foto'])
+        print('copied')
+        
+        # copyImagesToPath(
+        #         imgfrom, imgto, f"{listofData['foto']}"
+        #     )
+    
+
+
+# (id_nota,status)
+def updateNotaHeaderStatusById(listOfQuery, date: datetime.datetime):
+    Year = date.strftime("%Y")
+    Month = HASHMONTH[int(date.strftime("%m")) - 1]
+    Day = date.strftime("%d")
+    headerCsv = pd.read_csv(DATAPATH / "Nota" / Year / Month / "nota_header.csv")
+    for i in listOfQuery:
+        headerCsv.loc[headerCsv["id_nota"] == i[0], "status_nota"] = i[1]
+    headerCsv.reset_index(drop=True, inplace=True)
+    headerCsv.to_csv(DATAPATH / "Nota" / Year / Month / "nota_header.csv", index=False)
+
+
+def copyImagesToPath(uploadFromPath, CopiedToPath, name):
+    # print('copying image running')
+    # print(uploadFromPath, " -=========- ", CopiedToPath)
+    # img1 = PILImage.open(r"{}".format(uploadFromPath))
+    # img1.save(CopiedToPath / name)
+    
+    #cara 2
+    # shutil.copy(uploadFromPath, CopiedToPath / name)
+    try:
+        shutil.copyfile(uploadFromPath, CopiedToPath / name)
+        print('copied')
+    except Exception as e:
+        print(e)
+    
+    #cara 3
+    # file = open(CopiedToPath / name, 'rb')
+    # with open(uploadFromPath, 'wb') as new_file:
+    #     while True:
+    #         byte = new_file.read(1)
+    #         if not byte:
+    #             break
+    #         file.write(byte[0])

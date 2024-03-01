@@ -7,11 +7,13 @@ from collections import namedtuple
 import datetime
 import re
 import pandas as pd
+from PIL import Image as PILImage
 import os
 import locale
-import uuid
 import numpy as np
+import uuid
 from dateutil.relativedelta import relativedelta
+import shutil
 
 BASEDIR = Path(__file__).parent.parent
 JSONPATH = BASEDIR / 'json'
