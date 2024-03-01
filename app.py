@@ -115,4 +115,4 @@ def main(page: Page):
     page.go(page.route)
     page.on_window_event=window_event_page
 
-app(target=main, view=AppView.WEB_BROWSER,route_url_strategy="hash")
+app(target=main,route_url_strategy="hash")

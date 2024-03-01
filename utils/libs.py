@@ -15,7 +15,9 @@ import uuid
 from dateutil.relativedelta import relativedelta
 import shutil
 
-BASEDIR = Path(__file__).parent.parent
+print(os.path.join(Path(__file__).parent.parent))
+with open(os.path.join(Path(__file__).parent.parent,"assets/dir.txt")) as file:
+    BASEDIR=Path(file.readline()[:-1])
 JSONPATH = BASEDIR / 'json'
 DATAPATH = BASEDIR / 'data'
 IMGPATH = DATAPATH / 'img'
